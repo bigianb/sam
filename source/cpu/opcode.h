@@ -1,0 +1,7 @@
+namespace cpu
+{
+    class Opcode
+    {
+            
+    };
+}
