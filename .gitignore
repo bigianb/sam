@@ -48,6 +48,9 @@
 # Directories potentially created on remote AFP share
 .AppleDB
 .AppleDesktop
+
+roms
+
 Network Trash Folder
 Temporary Items
 .apdisk
