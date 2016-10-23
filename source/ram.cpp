@@ -1,6 +1,5 @@
 #include "ram.h"
 
-Ram::Ram(int size)
+Ram::Ram(int sizeIn) : bytes(sizeIn)
 {
-	bytes = std::make_shared<unsigned char>(size);
 }

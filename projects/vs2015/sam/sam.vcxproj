@@ -146,6 +146,7 @@
     <ClInclude Include="..\..\..\source\ram.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\source\cpu\z80.cpp" />
     <ClCompile Include="..\..\..\source\main_1942.cpp" />
     <ClCompile Include="..\..\..\source\ram.cpp" />
   </ItemGroup>

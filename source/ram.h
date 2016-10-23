@@ -1,11 +1,11 @@
 #pragma once
 
-#include <memory>
+#include <vector>
 
 class Ram
 {
 public:
 	Ram(int size);
 
-	std::shared_ptr<unsigned char> bytes;
+	std::vector<unsigned char> bytes;
 };
