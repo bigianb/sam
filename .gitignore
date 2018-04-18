@@ -79,3 +79,4 @@ $RECYCLE.BIN/
 *.db
 Debug/
 Release/
+/.vs

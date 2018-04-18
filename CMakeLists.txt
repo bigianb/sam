@@ -50,10 +50,16 @@ set(CPU_SRC_FILES
   source/cpu/opcode.h
   source/cpu/z80.cpp
   source/cpu/z80.h
+  source/rom_loader.h
+  source/rom_loader.cpp
 )
   
 set(SRC_FILES
   source/main_1942.cpp
+)
+
+set(SIDETRAC_FILES
+  source/main_sidetrac.cpp
 )
 
 add_library(core STATIC ${CORE_SRC_FILES})
@@ -61,6 +67,9 @@ add_library(cpu STATIC ${CPU_SRC_FILES})
 
 add_executable(sam_1942 ${SRC_FILES})
 target_link_libraries(sam_1942 cpu core)
+
+add_executable(sam_sidetrac ${SIDETRAC_FILES})
+target_link_libraries(sam_sidetrac cpu core)
 
 include(BoostTestHelpers.cmake)
 #add_boost_test(tests/emu/attotime.cpp core)
