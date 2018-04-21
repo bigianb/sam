@@ -50,8 +50,12 @@ set(CPU_SRC_FILES
   source/cpu/opcode.h
   source/cpu/z80.cpp
   source/cpu/z80.h
+  source/cpu/m6502.cpp
+  source/cpu/m6502.h
   source/rom_loader.h
   source/rom_loader.cpp
+  source/direct_address_bus.h
+  source/direct_address_bus.cpp
 )
   
 set(SRC_FILES

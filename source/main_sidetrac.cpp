@@ -1,4 +1,4 @@
-#include "cpu/z80.h"
+#include "cpu/m6502.h"
 #include "ram.h"
 #include <fstream>
 #include <stdexcept>
@@ -7,6 +7,7 @@
 using namespace std;
 
 #include "rom_loader.h"
+#include "direct_address_bus.h"
 
 
 int main(int argc, char* argv[])
@@ -18,13 +19,17 @@ int main(int argc, char* argv[])
 	RomLoader romLoader(romBase);
 	romLoader.load("stl8a-1", 0x2800, 0x0800, ram);
 
-	z80 cpu;
+	DirectAddressBus bus(ram);
+
+	m6502 cpu(bus);
 	auto pc = 0;
 	for (auto i = 0; i < 10; ++i) {
 		auto desc = cpu.disassemble(pc);
 		std::cout << desc.line << "\n";
 		pc += desc.numBytes;
 	}
+	std::string x;
+	std::cin >> x;
 	return 0;
 }
 /*

@@ -1,10 +1,12 @@
 #pragma once
 
 #include<string>
+#include "../address_bus.h"
 
 class m6502
 {
 public:
+	m6502(AddressBus& ab) : addressBus(ab) {}
 	void step();
 	
 
@@ -39,5 +41,8 @@ public:
 	unsigned short IYReg;
 	unsigned short SPReg;
 	unsigned short PCReg;
+
+private:
+	AddressBus & addressBus;
 
 };
