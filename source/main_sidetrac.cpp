@@ -3,6 +3,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -14,22 +15,28 @@ int main(int argc, char* argv[])
 {
 	Ram ram(64 * 1024);
 
-	string romBase("C:\\emu\\sam\\roms\\sidetrac");
+	//string romBase("C:\\emu\\sam\\roms\\sidetrac");
+	string romBase("/Users/ian/roms/mame/sidetrac");
 
 	RomLoader romLoader(romBase);
 	romLoader.load("stl8a-1", 0x2800, 0x0800, ram);
+	romLoader.load("stl7a-2", 0x3000, 0x0800, ram);
+	romLoader.load("stl6a-2", 0x3800, 0x0800, ram);
+	romLoader.load("stl9c-1", 0x4800, 0x0400, ram);
 
 	DirectAddressBus bus(ram);
 
 	m6502 cpu(bus);
-	auto pc = 0;
-	for (auto i = 0; i < 10; ++i) {
+	
+	// 0x3f00 is mirrored to 0xFF00
+	auto pc = bus.readByte(0x3FFD) * 256 + bus.readByte(0x3FFC);
+	for (auto i = 0; i < 50; ++i) {
 		auto desc = cpu.disassemble(pc);
-		std::cout << desc.line << "\n";
+		std::cout << std::setw(4) << std::setfill('0') << std::hex << pc << " : ";
+		std::cout << desc.line << std::endl;
 		pc += desc.numBytes;
 	}
-	std::string x;
-	std::cin >> x;
+
 	return 0;
 }
 /*
