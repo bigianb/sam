@@ -16,7 +16,8 @@ int main(int argc, char* argv[])
 	Ram ram(64 * 1024);
 
 	//string romBase("C:\\emu\\sam\\roms\\sidetrac");
-	string romBase("/Users/ian/roms/mame/sidetrac");
+	//string romBase("/Users/ian/roms/mame/sidetrac");
+	string romBase("/home/ian/roms/mame/sidetrac");
 
 	RomLoader romLoader(romBase);
 	romLoader.load("stl8a-1", 0x2800, 0x0800, ram);
@@ -30,7 +31,7 @@ int main(int argc, char* argv[])
 	
 	// 0x3f00 is mirrored to 0xFF00
 	auto pc = bus.readByte(0x3FFD) * 256 + bus.readByte(0x3FFC);
-	for (auto i = 0; i < 50; ++i) {
+	for (auto i = 0; i < 400; ++i) {
 		auto desc = cpu.disassemble(pc);
 		std::cout << std::setw(4) << std::setfill('0') << std::hex << pc << " : ";
 		std::cout << desc.line << std::endl;
