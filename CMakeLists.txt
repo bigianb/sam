@@ -11,7 +11,8 @@ set(PROJECT_LIBS)
 
 set(COVERAGE OFF CACHE BOOL "Coverage")
 
-find_package(Boost)
+set(Boost_USE_STATIC_LIBS        ON)
+find_package(Boost REQUIRED COMPONENTS program_options filesystem)
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
 endif()
@@ -56,6 +57,8 @@ set(CPU_SRC_FILES
   source/rom_loader.cpp
   source/direct_address_bus.h
   source/direct_address_bus.cpp
+  source/debug_symbols.h
+  source/debug_symbols.cpp
 )
   
 set(SRC_FILES
@@ -70,10 +73,10 @@ add_library(core STATIC ${CORE_SRC_FILES})
 add_library(cpu STATIC ${CPU_SRC_FILES})
 
 add_executable(sam_1942 ${SRC_FILES})
-target_link_libraries(sam_1942 cpu core)
+target_link_libraries(sam_1942 cpu core ${Boost_LIBRARIES})
 
 add_executable(sam_sidetrac ${SIDETRAC_FILES})
-target_link_libraries(sam_sidetrac cpu core)
+target_link_libraries(sam_sidetrac cpu core ${Boost_LIBRARIES})
 
 include(BoostTestHelpers.cmake)
 #add_boost_test(tests/emu/attotime.cpp core)

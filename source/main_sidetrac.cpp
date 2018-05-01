@@ -5,21 +5,93 @@
 #include <iostream>
 #include <iomanip>
 
+#include "boost/program_options.hpp"
+
 using namespace std;
 
 #include "rom_loader.h"
 #include "direct_address_bus.h"
+#include "debug_symbols.h"
 
+struct CLOptions
+{
+	CLOptions() : errorReported(false), allDone(false) {}
 
-int main(int argc, char* argv[])
+	bool errorReported;
+	bool allDone;
+	std::string rombase;
+	std::string configbase;
+};
+
+static CLOptions parseCommandLineOptions(int argc, char *argv[])
+{
+	CLOptions retval;
+#ifdef _WIN32
+	string romBase("C:\\emu\\sam\\roms");
+#elif __APPLE__
+	std::string romBase("/Users/ian/roms/mame");
+	std::string configBase("/Users/ian/dev/sam/config");
+#else
+	string romBase("/home/ian/roms/mame");
+#endif
+	namespace po = boost::program_options;
+	po::options_description desc("Options");
+	desc.add_options()
+	("help,h", "Print help messages")
+	("rombase", po::value<string>()->default_value(romBase), "Rom Base Directory")
+	("configbase", po::value<string>()->default_value(configBase), "Config Base Directory");
+	po::variables_map vm;
+
+	try
+	{
+		// throws on error
+		po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+
+		if (vm.count("help"))
+		{
+			std::cout << desc << std::endl;
+			retval.allDone = true;
+			return retval;
+		}
+		retval.rombase = vm["rombase"].as<std::string>();
+		retval.configbase = vm["configbase"].as<std::string>();
+		po::notify(vm);
+	}
+	catch (boost::program_options::required_option &e)
+	{
+		std::cerr << "ERROR: " << e.what() << std::endl
+				  << std::endl;
+		std::cout << desc << std::endl;
+		retval.errorReported = true;
+		return retval;
+	}
+	catch (boost::program_options::error &e)
+	{
+		std::cerr << "ERROR: " << e.what() << std::endl
+				  << std::endl;
+		std::cout << desc << std::endl;
+		retval.errorReported = true;
+		return retval;
+	}
+
+	return retval;
+}
+
+int main(int argc, char *argv[])
 {
 	Ram ram(64 * 1024);
 
-	//string romBase("C:\\emu\\sam\\roms\\sidetrac");
-	//string romBase("/Users/ian/roms/mame/sidetrac");
-	string romBase("/home/ian/roms/mame/sidetrac");
+	CLOptions options = parseCommandLineOptions(argc, argv);
+	if (options.allDone)
+	{
+		return 0;
+	}
+	if (options.errorReported)
+	{
+		return -1;
+	}
 
-	RomLoader romLoader(romBase);
+	RomLoader romLoader(options.rombase + "/sidetrac");
 	romLoader.load("stl8a-1", 0x2800, 0x0800, ram);
 	romLoader.load("stl7a-2", 0x3000, 0x0800, ram);
 	romLoader.load("stl6a-2", 0x3800, 0x0800, ram);
@@ -28,10 +100,14 @@ int main(int argc, char* argv[])
 	DirectAddressBus bus(ram);
 
 	m6502 cpu(bus);
-	
+
+	DebugSymbols symbols;
+	symbols.read(options.configbase + "/sidetrac_symbols.json");
+
 	// 0x3f00 is mirrored to 0xFF00
 	auto pc = bus.readByte(0x3FFD) * 256 + bus.readByte(0x3FFC);
-	for (auto i = 0; i < 400; ++i) {
+	for (auto i = 0; i < 400; ++i)
+	{
 		auto desc = cpu.disassemble(pc);
 		std::cout << std::setw(4) << std::setfill('0') << std::hex << pc << " : ";
 		std::cout << desc.line << std::endl;
