@@ -27,7 +27,8 @@ static CLOptions parseCommandLineOptions(int argc, char *argv[])
 {
 	CLOptions retval;
 #ifdef _WIN32
-	string romBase("C:\\emu\\sam\\roms");
+	std::string romBase("C:\\emu\\sam\\roms");
+	std::string configBase("C:\\emu\\sam\\config");
 #elif __APPLE__
 	std::string romBase("/Users/ian/roms/mame");
 	std::string configBase("/Users/ian/dev/sam/config");
