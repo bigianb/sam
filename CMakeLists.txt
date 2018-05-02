@@ -57,8 +57,8 @@ set(CPU_SRC_FILES
   source/rom_loader.cpp
   source/direct_address_bus.h
   source/direct_address_bus.cpp
-  source/debug_symbols.h
-  source/debug_symbols.cpp
+  source/debug_info.h
+  source/debug_info.cpp
 )
   
 set(SRC_FILES

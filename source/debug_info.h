@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-class DebugSymbols
+class DebugInfo
 {
   public:
     void read(std::string filename);
@@ -11,7 +11,8 @@ class DebugSymbols
     enum class RangeType
     {
         eCODE,
-        eDATA
+        eDATA,
+		eUNKNOWN
     };
 
     class Range
@@ -23,6 +24,8 @@ class DebugSymbols
     };
 
     const std::vector<Range> &getRanges() const { return ranges; }
+
+	RangeType getType(unsigned int address);
 
   private:
     std::vector<Range> ranges;

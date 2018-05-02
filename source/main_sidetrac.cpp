@@ -11,7 +11,7 @@ using namespace std;
 
 #include "rom_loader.h"
 #include "direct_address_bus.h"
-#include "debug_symbols.h"
+#include "debug_info.h"
 
 struct CLOptions
 {
@@ -102,17 +102,28 @@ int main(int argc, char *argv[])
 
 	m6502 cpu(bus);
 
-	DebugSymbols symbols;
+	DebugInfo symbols;
 	symbols.read(options.configbase + "/sidetrac_symbols.json");
 
 	// 0x3f00 is mirrored to 0xFF00
 	auto pc = bus.readByte(0x3FFD) * 256 + bus.readByte(0x3FFC);
-	for (auto i = 0; i < 400; ++i)
+	for (auto i = 0; i < 2048; ++i)
 	{
-		auto desc = cpu.disassemble(pc);
 		std::cout << std::setw(4) << std::setfill('0') << std::hex << pc << " : ";
-		std::cout << desc.line << std::endl;
-		pc += desc.numBytes;
+		if (symbols.getType(pc) == DebugInfo::RangeType::eCODE) {
+			auto desc = cpu.disassemble(pc);
+			std::cout << desc.line << std::endl;
+			pc += desc.numBytes;
+		}
+		else {
+			uint8_t val = bus.readByte(pc);
+			std::cout << "0x" << std::setw(2) << std::setfill('0') << std::hex << (int)val;
+			if (val >= 0x20 && val < 0x80) {
+				std::cout << "  " << val;
+			}
+			std::cout << std::endl;
+			pc += 1;
+		}
 	}
 
 	return 0;

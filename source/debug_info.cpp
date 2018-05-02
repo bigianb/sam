@@ -1,11 +1,11 @@
-#include "debug_symbols.h"
+#include "debug_info.h"
 
 #include <iostream>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-void DebugSymbols::read(std::string filename)
+void DebugInfo::read(std::string filename)
 {
     namespace pt = boost::property_tree;
     pt::ptree tree;
@@ -14,13 +14,13 @@ void DebugSymbols::read(std::string filename)
     pt::ptree range_node = tree.get_child("ranges");
     
     for (const std::pair<std::string, pt::ptree> &range_item : range_node){
-        for (const std::pair<std::string, pt::ptree> &kv : range_item.second){
-            Range rangeItem;
+		Range rangeItem;
+        for (const std::pair<std::string, pt::ptree> &kv : range_item.second){          
             std::string value = kv.second.get_value<std::string>();
             if (kv.first == "start"){
-
+				std::sscanf(value.c_str(), "0x%x", &rangeItem.start);
             } else if (kv.first == "end"){
-
+				std::sscanf(value.c_str(), "0x%x", &rangeItem.end);
             } else if (kv.first == "type"){
                 if (value == "code"){
                     rangeItem.type = RangeType::eCODE;
@@ -33,8 +33,18 @@ void DebugSymbols::read(std::string filename)
             } else {
                 // TODO: throw exception
                 std::cerr << "unknown key: " << kv.first << std::endl;
-            }
-            ranges.push_back(rangeItem);
+            }   
         }
+		ranges.push_back(rangeItem);
     }
+}
+
+DebugInfo::RangeType DebugInfo::getType(unsigned int address)
+{
+	for (const Range& range: ranges) {
+		if (range.start <= address && address <= range.end) {
+			return range.type;
+		}
+	}
+	return RangeType::eUNKNOWN;
 }
