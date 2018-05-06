@@ -109,13 +109,19 @@ int main(int argc, char *argv[])
 	auto pc = bus.readByte(0x3FFD) * 256 + bus.readByte(0x3FFC);
 	for (auto i = 0; i < 2048; ++i)
 	{
-		std::cout << std::setw(4) << std::setfill('0') << std::hex << pc << " : ";
+		
 		if (symbols.getType(pc) == DebugInfo::RangeType::eCODE) {
+			auto funcname = symbols.getFunctionName(pc);
+			if (funcname != "") {
+				std::cout << std::endl << funcname << ":" << std::endl;
+			}
+			std::cout << std::setw(4) << std::setfill('0') << std::hex << pc << " : ";
 			auto desc = cpu.disassemble(pc);
 			std::cout << desc.line << std::endl;
 			pc += desc.numBytes;
 		}
 		else {
+			std::cout << std::setw(4) << std::setfill('0') << std::hex << pc << " : ";
 			uint8_t val = bus.readByte(pc);
 			std::cout << "0x" << std::setw(2) << std::setfill('0') << std::hex << (int)val;
 			if (val >= 0x20 && val < 0x80) {

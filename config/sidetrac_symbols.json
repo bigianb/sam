@@ -5,5 +5,13 @@
         {"start": "0x29c5", "end": "0x2e95", "type": "code"},
         {"start": "0x2e96", "end": "0x2fc8", "type": "data"},
         {"start": "0x2fc9", "end": "0x4000", "type": "code"}
-    ] 
+    ],
+    "functions": {
+      "0x2a16": {"name": "set_videobuf_0()"},
+      "0x2a1b": {"name": "set_videobuf_1()"},
+      "0x2a20": {"name": "set_videobuf_2()"},
+      "0x2a25": {"name": "set_videobuf_3()"},
+      "0x2e73": {"name": "print_string(x)"},
+      "0x2e87": {"name": "print_copyright()"}
+    }
 }

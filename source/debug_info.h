@@ -2,6 +2,9 @@
 
 #include <string>
 #include <vector>
+#include <map>
+
+#include <boost/property_tree/ptree.hpp>
 
 class DebugInfo
 {
@@ -27,6 +30,13 @@ class DebugInfo
 
 	RangeType getType(unsigned int address);
 
+	std::string getFunctionName(unsigned int address);
+
   private:
+	void readRanges(boost::property_tree::ptree range_node);
+	void readFunctions(boost::property_tree::ptree functions_node);
+
     std::vector<Range> ranges;
+
+	std::map<unsigned int, std::string> functionNameMap;
 };
