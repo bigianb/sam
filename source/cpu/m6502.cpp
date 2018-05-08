@@ -26,7 +26,7 @@ static void formatRelativeInstruction(std::ostringstream& os, const char* opcode
 
 static void formatAbsoluteInstruction(std::ostringstream& os, const char* opcode, int loVal, int hiVal)
 {
-	os << opcode << " $" << std::setw(2) << std::setfill('0') << std::hex << hiVal << loVal;
+	os << opcode << " $" << std::setw(2) << std::setfill('0') << std::hex << hiVal << std::setw(2) << loVal;
 }
 
 static void formatAbsoluteXInstruction(std::ostringstream& os, const char* opcode, int loVal, int hiVal)
