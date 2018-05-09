@@ -102,34 +102,44 @@ int main(int argc, char *argv[])
 
 	m6502 cpu(bus);
 
-	DebugInfo symbols;
-	symbols.read(options.configbase + "/sidetrac_symbols.json");
+	DebugInfo debugInfo;
+	debugInfo.read(options.configbase + "/sidetrac_symbols.json");
 
 	// 0x3f00 is mirrored to 0xFF00
 	auto pc = bus.readByte(0x3FFD) * 256 + bus.readByte(0x3FFC);
-	for (auto i = 0; i < 2048; ++i)
+	while(pc < 0x3aaa)
 	{
-		
-		if (symbols.getType(pc) == DebugInfo::RangeType::eCODE) {
-			auto funcname = symbols.getFunctionName(pc);
+		std::ostringstream stringStream;
+		int pc_inc=1;
+		if (debugInfo.getType(pc) == DebugInfo::RangeType::eCODE) {
+			auto funcname = debugInfo.getFunctionName(pc);
 			if (funcname != "") {
-				std::cout << std::endl << funcname << ":" << std::endl;
+				stringStream << std::endl << funcname << std::endl;
 			}
-			std::cout << std::setw(4) << std::setfill('0') << std::hex << pc << " : ";
-			auto desc = cpu.disassemble(pc);
-			std::cout << desc.line << std::endl;
-			pc += desc.numBytes;
+			stringStream << "    " << std::setw(4) << std::setfill('0') << std::hex << pc << ": ";
+			auto desc = cpu.disassemble(pc, debugInfo);
+			stringStream << desc.line;
+			pc_inc = desc.numBytes;
 		}
 		else {
-			std::cout << std::setw(4) << std::setfill('0') << std::hex << pc << " : ";
+			stringStream << "    " << std::setw(4) << std::setfill('0') << std::hex << pc << ": ";
 			uint8_t val = bus.readByte(pc);
-			std::cout << "0x" << std::setw(2) << std::setfill('0') << std::hex << (int)val;
+			stringStream << "0x" << std::setw(2) << std::setfill('0') << std::hex << (int)val;
 			if (val >= 0x20 && val < 0x80) {
-				std::cout << "  " << val;
+				stringStream << "  " << val;
 			}
-			std::cout << std::endl;
-			pc += 1;
 		}
+		auto pos = stringStream.str().length();
+		while (pos < 45){
+			stringStream << " ";
+			++pos;
+		}
+		auto comment = debugInfo.getComment(pc);
+		if (comment != ""){
+			stringStream << "; " << comment;
+		}
+		std::cout << stringStream.str() << std::endl;
+		pc += pc_inc;
 	}
 
 	return 0;

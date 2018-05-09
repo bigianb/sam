@@ -2,6 +2,7 @@
 
 #include<string>
 #include "../address_bus.h"
+#include "../debug_info.h"
 
 class m6502
 {
@@ -24,7 +25,7 @@ public:
 		int numBytes;
 	};
 
-	OpcodeDesc disassemble(unsigned short pc);
+	OpcodeDesc disassemble(unsigned short pc, DebugInfo& info);
 
 	class Registers
 	{

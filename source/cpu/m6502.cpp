@@ -24,20 +24,52 @@ static void formatRelativeInstruction(std::ostringstream& os, const char* opcode
 	os << opcode << " *" << offset << "   -> 0x" << std::setw(2) << std::setfill('0') << std::hex << pcVal+offset+2;
 }
 
-static void formatAbsoluteInstruction(std::ostringstream& os, const char* opcode, int loVal, int hiVal)
+
+static void formatAbsoluteInstruction(std::ostringstream& os, const char* opcode, int loVal, int hiVal, DebugInfo& debugInfo, bool isRead)
 {
-	os << opcode << " $" << std::setw(2) << std::setfill('0') << std::hex << hiVal << std::setw(2) << loVal;
+	int val = (hiVal << 8) + loVal;
+	os << opcode << " $" << std::setw(4) << std::setfill('0') << std::hex << val;
+	auto funcname = debugInfo.getFunctionName(val);
+	if (funcname != "") {
+		os << "  " << funcname;
+	}
+	auto portname = isRead ? debugInfo.getReadPortName(val) : debugInfo.getWritePortName(val);
+	if (portname != "") {
+		os << "  " << portname;
+	}
 }
 
-static void formatAbsoluteXInstruction(std::ostringstream& os, const char* opcode, int loVal, int hiVal)
+static void formatAbsoluteInstructionR(std::ostringstream& os, const char* opcode, int loVal, int hiVal, DebugInfo& debugInfo)
 {
-	formatAbsoluteInstruction(os, opcode, loVal, hiVal);
+	formatAbsoluteInstruction(os, opcode, loVal, hiVal, debugInfo, true);
+}
+
+static void formatAbsoluteInstructionW(std::ostringstream& os, const char* opcode, int loVal, int hiVal, DebugInfo& debugInfo)
+{
+	formatAbsoluteInstruction(os, opcode, loVal, hiVal, debugInfo, false);
+}
+
+static void formatAbsoluteXInstructionR(std::ostringstream& os, const char* opcode, int loVal, int hiVal, DebugInfo& debugInfo)
+{
+	formatAbsoluteInstructionR(os, opcode, loVal, hiVal, debugInfo);
 	os << ", X";
 }
 
-static void formatAbsoluteYInstruction(std::ostringstream& os, const char* opcode, int loVal, int hiVal)
+static void formatAbsoluteXInstructionW(std::ostringstream& os, const char* opcode, int loVal, int hiVal, DebugInfo& debugInfo)
 {
-	formatAbsoluteInstruction(os, opcode, loVal, hiVal);
+	formatAbsoluteInstructionW(os, opcode, loVal, hiVal, debugInfo);
+	os << ", X";
+}
+
+static void formatAbsoluteYInstructionR(std::ostringstream& os, const char* opcode, int loVal, int hiVal, DebugInfo& debugInfo)
+{
+	formatAbsoluteInstructionR(os, opcode, loVal, hiVal, debugInfo);
+	os << ", Y";
+}
+
+static void formatAbsoluteYInstructionW(std::ostringstream& os, const char* opcode, int loVal, int hiVal, DebugInfo& debugInfo)
+{
+	formatAbsoluteInstructionW(os, opcode, loVal, hiVal, debugInfo);
 	os << ", Y";
 }
 
@@ -52,7 +84,7 @@ static void formatIndirectYInstruction(std::ostringstream& os, const char* opcod
 }
 
 
-m6502::OpcodeDesc m6502::disassemble(unsigned short pc)
+m6502::OpcodeDesc m6502::disassemble(unsigned short pc, DebugInfo& debugInfo)
 {
 	m6502::OpcodeDesc desc;
 	desc.numBytes = 1;
@@ -86,7 +118,7 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc)
 			stringStream << "ASL A";
 			break;
 		case 0x0e:
-			formatAbsoluteInstruction(stringStream, "ASL", addressBus.readByte(pc+1), addressBus.readByte(pc+2));
+			formatAbsoluteInstructionR(stringStream, "ASL", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
 			desc.numBytes = 3;
 			break;
 		case 0x10:
@@ -97,7 +129,7 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc)
 			stringStream << "CLC";
 			break;
 		case 0x20:
-			formatAbsoluteInstruction(stringStream, "JSR", addressBus.readByte(pc+1), addressBus.readByte(pc+2));
+			formatAbsoluteInstructionR(stringStream, "JSR", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
 			desc.numBytes = 3;
 			break;
 		case 0x24:
@@ -144,7 +176,7 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc)
 			stringStream << "LSR A";
 			break;
 		case 0x4c:
-			formatAbsoluteInstruction(stringStream, "JMP", addressBus.readByte(pc+1), addressBus.readByte(pc+2));
+			formatAbsoluteInstructionR(stringStream, "JMP", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
 			desc.numBytes = 3;
 			break;
 		case 0x50:
@@ -155,7 +187,7 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc)
 			stringStream << "CLI";
 			break;
 		case 0x5d:
-			formatAbsoluteXInstruction(stringStream, "EOR", addressBus.readByte(pc+1), addressBus.readByte(pc+2));
+			formatAbsoluteXInstructionR(stringStream, "EOR", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
 			desc.numBytes = 3;
 			break;
 		case 0x60:
@@ -178,8 +210,16 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc)
 		case 0x78:
 			stringStream << "SEI";
 			break;
+		case 0x7d:
+			formatAbsoluteXInstructionR(stringStream, "ADC", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
+			desc.numBytes = 3;
+			break;
 		case 0x81:
 			formatIndirectXInstruction(stringStream, "STA", addressBus.readByte(pc+1));
+			desc.numBytes = 2;
+			break;
+		case 0x84:
+			formatZPageInstruction(stringStream, "STY", addressBus.readByte(pc+1));
 			desc.numBytes = 2;
 			break;
 		case 0x85:
@@ -197,7 +237,7 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc)
 			stringStream << "TXA";
 			break;
 		case 0x8d:
-			formatAbsoluteInstruction(stringStream, "STA", addressBus.readByte(pc+1), addressBus.readByte(pc+2));
+			formatAbsoluteInstructionW(stringStream, "STA", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
 			desc.numBytes = 3;
 			break;
 		case 0x90:
@@ -216,7 +256,7 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc)
 			stringStream << "TYA";
 			break;
 		case 0x99:
-			formatAbsoluteYInstruction(stringStream, "STA", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2));
+			formatAbsoluteYInstructionW(stringStream, "STA", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
 			desc.numBytes = 3;
 			break;
 		case 0x9A:
@@ -253,7 +293,7 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc)
 			stringStream << "TAX";
 			break;
 		case 0xad:
-			formatAbsoluteInstruction(stringStream, "LDA", addressBus.readByte(pc+1), addressBus.readByte(pc+2));
+			formatAbsoluteInstructionR(stringStream, "LDA", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
 			desc.numBytes = 3;
 			break;
 		case 0xb0:
@@ -264,16 +304,24 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc)
 			formatIndirectYInstruction(stringStream, "LDA", addressBus.readByte(pc + 1));
 			desc.numBytes = 2;
 			break;
+		case 0xb4:
+			formatZPageXInstruction(stringStream, "LDY", addressBus.readByte(pc+1));
+			desc.numBytes = 2;
+			break;
 		case 0xb5:
 			formatZPageXInstruction(stringStream, "LDA", addressBus.readByte(pc+1));
 			desc.numBytes = 2;
 			break;
+		case 0xb9:
+			formatAbsoluteYInstructionR(stringStream, "LDA", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
+			desc.numBytes = 3;
+			break;
 		case 0xbd:
-			formatAbsoluteXInstruction(stringStream, "LDA", addressBus.readByte(pc+1), addressBus.readByte(pc+2));
+			formatAbsoluteXInstructionR(stringStream, "LDA", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
 			desc.numBytes = 3;
 			break;
 		case 0xbc:
-			formatAbsoluteXInstruction(stringStream, "LDY", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2));
+			formatAbsoluteXInstructionR(stringStream, "LDY", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
 			desc.numBytes = 3;
 			break;
 		case 0xc5:
@@ -295,7 +343,7 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc)
 			stringStream << "DEX";
 			break;
 		case 0xcc:
-			formatAbsoluteInstruction(stringStream, "CPY", addressBus.readByte(pc+1), addressBus.readByte(pc+2));
+			formatAbsoluteInstructionR(stringStream, "CPY", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
 			desc.numBytes = 3;
 			break;
 		case 0xd0:
@@ -305,8 +353,20 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc)
 		case 0xd8:
 			stringStream << "CLD";
 			break;
+		case 0xd9:
+			formatAbsoluteYInstructionR(stringStream, "CMP", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
+			desc.numBytes = 3;
+			break;
+		case 0xdd:
+			formatAbsoluteXInstructionR(stringStream, "CMP", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
+			desc.numBytes = 3;
+			break;
 		case 0xe0:
 			formatImmediateInstruction(stringStream, "CPX", addressBus.readByte(pc+1));
+			desc.numBytes = 2;
+			break;
+		case 0xe5:
+			formatZPageInstruction(stringStream, "SBC", addressBus.readByte(pc+1));
 			desc.numBytes = 2;
 			break;
 		case 0xe6:
@@ -324,7 +384,7 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc)
 			stringStream << "NOP";
 			break;
 		case 0xed:
-			formatAbsoluteInstruction(stringStream, "SBC", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2));
+			formatAbsoluteInstructionR(stringStream, "SBC", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
 			desc.numBytes = 3;
 			break;
 		case 0xf0:

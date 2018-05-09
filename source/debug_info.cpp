@@ -17,6 +17,10 @@ void DebugInfo::read(std::string filename)
 	readRanges(range_node);
 	pt::ptree functions_node = tree.get_child("functions");
 	readFunctions(functions_node);
+	pt::ptree ports_node = tree.get_child("ports");
+	readPorts(ports_node);
+	pt::ptree comments_node = tree.get_child("comments");
+	readComments(comments_node);
 }
 
 void DebugInfo::readRanges(pt::ptree range_node)
@@ -66,6 +70,38 @@ void DebugInfo::readFunctions(pt::ptree function_node)
 	}
 }
 
+void DebugInfo::readPorts(pt::ptree ports_node)
+{
+	for (const std::pair<std::string, pt::ptree> &portItem : ports_node) {
+		
+		const auto& addrNode = portItem.second.get_child("addr");
+		const auto& nameNode = portItem.second.get_child("name");
+		const auto& dirNode = portItem.second.get_child("dir");
+
+		unsigned int addr;
+		std::sscanf(addrNode.get_value<std::string>().c_str(), "0x%x", &addr);
+
+		std::string name = nameNode.get_value<std::string>();
+		std::string dir = dirNode.get_value<std::string>();
+
+		if (dir.find('r') != std::string::npos){
+			portReadMap[addr] = name;
+		}
+		if (dir.find('w') != std::string::npos){
+			portWriteMap[addr] = name;
+		}
+	}
+}
+
+void DebugInfo::readComments(pt::ptree comments_node)
+{
+	for (const std::pair<std::string, pt::ptree> &commentItem : comments_node) {
+		unsigned int addr;
+		std::sscanf(commentItem.first.c_str(), "0x%x", &addr);
+		commentsMap[addr] = commentItem.second.get_value<std::string>();
+	}
+}
+
 DebugInfo::RangeType DebugInfo::getType(unsigned int address)
 {
 	for (const Range& range: ranges) {
@@ -81,6 +117,39 @@ std::string DebugInfo::getFunctionName(unsigned int address)
 	auto it = functionNameMap.find(address);
 	std::string name;
 	if (it != functionNameMap.end())
+	{
+		name = it->second;
+	}
+	return name;
+}
+
+std::string DebugInfo::getReadPortName(unsigned int address)
+{
+	auto it = portReadMap.find(address);
+	std::string name;
+	if (it != portReadMap.end())
+	{
+		name = it->second;
+	}
+	return name;
+}
+
+std::string DebugInfo::getWritePortName(unsigned int address)
+{
+	auto it = portWriteMap.find(address);
+	std::string name;
+	if (it != portWriteMap.end())
+	{
+		name = it->second;
+	}
+	return name;
+}
+
+std::string DebugInfo::getComment(unsigned int address)
+{
+	auto it = commentsMap.find(address);
+	std::string name;
+	if (it != commentsMap.end())
 	{
 		name = it->second;
 	}
