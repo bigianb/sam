@@ -23,6 +23,7 @@
       "0x2a1b": { "name": "set_videopage_1()" },
       "0x2a20": { "name": "set_videopage_2()" },
       "0x2a25": { "name": "set_videopage_3()" },
+      "0x2b0e": { "name": "IRQ_Handler" },
       "0x2be9": { "name": "audio_off()" },
       "0x2bee": { "name": "audio_on()" },
       "0x2cb0": { "name": "test_for_coin()" },
@@ -38,14 +39,17 @@
       "0x333d": { "name": "dec_xpos()" }
     },
     "ports": [
-        {"addr": "0x5040", "name": "sprite1_xpos", "dir": "r"},
-        {"addr": "0x5080", "name": "sprite1_ypos", "dir": "r"},
-        {"addr": "0x5080", "name": "sprite2_xpos", "dir": "r"},
-        {"addr": "0x50c0", "name": "sprite2_ypos", "dir": "r"},
+        {"addr": "0x5000", "name": "sprite1_xpos", "dir": "w"},
+        {"addr": "0x5040", "name": "sprite1_ypos", "dir": "w"},
+        {"addr": "0x5080", "name": "sprite2_xpos", "dir": "w"},
+        {"addr": "0x50c0", "name": "sprite2_ypos", "dir": "w"},
         {"addr": "0x5100", "name": "dip_switches", "dir": "r"},
         {"addr": "0x5100", "name": "sprite_no", "dir": "w"},
         {"addr": "0x5101", "name": "input_0", "dir": "r"},
         {"addr": "0x5101", "name": "sprite_enable", "dir": "w"},
+        {"addr": "0x5103", "name": "int_latch", "dir": "r"},
+        {"addr": "0x5200", "name": "audio_1", "dir": "w"},
+        {"addr": "0x5201", "name": "audio_2", "dir": "w"},
         {"addr": "0x5213", "name": "input_1", "dir": "r"}
     ],
     "labels": {

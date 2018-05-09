@@ -107,6 +107,11 @@ int main(int argc, char *argv[])
 
 	// 0x3f00 is mirrored to 0xFF00
 	auto pc = bus.readByte(0x3FFD) * 256 + bus.readByte(0x3FFC);
+	auto irq_vec = bus.readByte(0x3FFF) * 256 + bus.readByte(0x3FFE);
+
+	std::cout << "Initial PC: 0x" << std::setw(4) << std::setfill('0') << std::hex << pc << std::endl;
+	std::cout << "IRQ vector: 0x" << std::setw(4) << std::setfill('0') << std::hex << irq_vec << std::endl;
+
 	while(pc < 0x3aaa)
 	{
 		std::ostringstream stringStream;
@@ -129,13 +134,13 @@ int main(int argc, char *argv[])
 				stringStream << "  " << val;
 			}
 		}
-		auto pos = stringStream.str().length();
-		while (pos < 45){
-			stringStream << " ";
-			++pos;
-		}
 		auto comment = debugInfo.getComment(pc);
-		if (comment != ""){
+		if (comment != "") {
+			auto pos = stringStream.str().length();
+			while (pos < 45){
+				stringStream << " ";
+				++pos;
+			}
 			stringStream << "; " << comment;
 		}
 		std::cout << stringStream.str() << std::endl;
