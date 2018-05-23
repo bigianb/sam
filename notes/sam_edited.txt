@@ -900,277 +900,42 @@ print_copyright()
     2e92: INX
     2e93: INY
     2e94: BNE *-11   -> 0x2e8b
-    2e96: 0x47  G
-    2e97: 0x41  A
-    2e98: 0x4d  M
-    2e99: 0x45  E
-    2e9a: 0x20   
-    2e9b: 0x4f  O
-    2e9c: 0x56  V
-    2e9d: 0x45  E
-    2e9e: 0x52  R
+
+    2e96: 0x47  GAME OVER
     2e9f: 0x00
-    2ea0: 0x54  T
-    2ea1: 0x4f  O
-    2ea2: 0x44  D
-    2ea3: 0x41  A
-    2ea4: 0x59  Y
-    2ea5: 0x53  S
-    2ea6: 0x20   
-    2ea7: 0x48  H
-    2ea8: 0x49  I
-    2ea9: 0x47  G
-    2eaa: 0x48  H
-    2eab: 0x20   
-    2eac: 0x53  S
-    2ead: 0x43  C
-    2eae: 0x4f  O
-    2eaf: 0x52  R
-    2eb0: 0x45  E
+    2ea0: 0x54  TODAYS HIGH SCORE
     2eb1: 0x00
-    2eb2: 0x53  S
-    2eb3: 0x49  I
-    2eb4: 0x44  D
-    2eb5: 0x45  E
-    2eb6: 0x20   
-    2eb7: 0x54  T
-    2eb8: 0x52  R
-    2eb9: 0x41  A
-    2eba: 0x43  C
-    2ebb: 0x4b  K
+    2eb2: 0x53  SIDE TRACK
     2ebc: 0x00
-    2ebd: 0x31  1
-    2ebe: 0x20   
-    2ebf: 0x43  C
-    2ec0: 0x4f  O
-    2ec1: 0x49  I
-    2ec2: 0x4e  N
-    2ec3: 0x20   
-    2ec4: 0x69  i
-    2ec5: 0x69  i
-    2ec6: 0x69  i
-    2ec7: 0x20   
-    2ec8: 0x31  1
-    2ec9: 0x20   
-    2eca: 0x50  P
-    2ecb: 0x4c  L
-    2ecc: 0x41  A
-    2ecd: 0x59  Y
+    2ebd: 0x31  1 COIN iii 1 PLAY
     2ece: 0x00
-    2ecf: 0x53  S
-    2ed0: 0x57  W
-    2ed1: 0x49  I
-    2ed2: 0x54  T
-    2ed3: 0x43  C
-    2ed4: 0x48  H
-    2ed5: 0x20   
-    2ed6: 0x54  T
-    2ed7: 0x52  R
-    2ed8: 0x41  A
-    2ed9: 0x43  C
-    2eda: 0x4b  K
-    2edb: 0x53  S
-    2edc: 0x20   
-    2edd: 0x54  T
-    2ede: 0x4f  O
-    2edf: 0x20   
-    2ee0: 0x41  A
-    2ee1: 0x56  V
-    2ee2: 0x4f  O
-    2ee3: 0x49  I
-    2ee4: 0x44  D
+    2ecf: 0x53  SWITCH TACKS TO AVOID
     2ee5: 0x00
-    2ee6: 0x43  C
-    2ee7: 0x52  R
-    2ee8: 0x41  A
-    2ee9: 0x53  S
-    2eea: 0x48  H
-    2eeb: 0x20   
-    2eec: 0x57  W
-    2eed: 0x49  I
-    2eee: 0x54  T
-    2eef: 0x48  H
-    2ef0: 0x20   
-    2ef1: 0x4b  K
-    2ef2: 0x49  I
-    2ef3: 0x4c  L
-    2ef4: 0x4c  L
-    2ef5: 0x45  E
-    2ef6: 0x52  R
+    2ee6: 0x43  CRASH WITH KILLER
     2ef7: 0x20   
-    2ef8: 0x45  E
-    2ef9: 0x4e  N
-    2efa: 0x47  G
-    2efb: 0x49  I
-    2efc: 0x4e  N
-    2efd: 0x45  E
+    2ef8: 0x45  ENGINE
     2efe: 0x00
-    2eff: 0x50  P
-    2f00: 0x41  A
-    2f01: 0x53  S
-    2f02: 0x53  S
-    2f03: 0x20   
-    2f04: 0x53  S
-    2f05: 0x54  T
-    2f06: 0x41  A
-    2f07: 0x52  R
-    2f08: 0x54  T
-    2f09: 0x49  I
-    2f0a: 0x4e  N
-    2f0b: 0x47  G
-    2f0c: 0x20   
-    2f0d: 0x50  P
-    2f0e: 0x4f  O
-    2f0f: 0x49  I
-    2f10: 0x4e  N
-    2f11: 0x54  T
-    2f12: 0x20   
-    2f13: 0x46  F
-    2f14: 0x4f  O
-    2f15: 0x52  R
+    2eff: 0x50  PASS STARTING POINT FOR
     2f16: 0x00
-    2f17: 0x42  B
-    2f18: 0x4f  O
-    2f19: 0x4e  N
-    2f1a: 0x55  U
-    2f1b: 0x53  S
-    2f1c: 0x20   
-    2f1d: 0x43  C
-    2f1e: 0x41  A
-    2f1f: 0x52  R
-    2f20: 0x53  S
-    2f21: 0x20   
-    2f22: 0x41  A
-    2f23: 0x4e  N
-    2f24: 0x44  D
-    2f25: 0x20   
-    2f26: 0x53  S
-    2f27: 0x43  C
-    2f28: 0x4f  O
-    2f29: 0x52  R
-    2f2a: 0x45  E
+    2f17: 0x42  BONUS CARS AND SCORE
     2f2b: 0x00
-    2f2c: 0x41  A
-    2f2d: 0x44  D
-    2f2e: 0x44  D
-    2f2f: 0x45  E
-    2f30: 0x44  D
-    2f31: 0x20   
-    2f32: 0x54  T
-    2f33: 0x52  R
-    2f34: 0x41  A
-    2f35: 0x49  I
-    2f36: 0x4e  N
-    2f37: 0x20   
-    2f38: 0x43  C
-    2f39: 0x41  A
-    2f3a: 0x52  R
-    2f3b: 0x53  S
-    2f3c: 0x20   
-    2f3d: 0x49  I
-    2f3e: 0x4e  N
-    2f3f: 0x43  C
-    2f40: 0x52  R
-    2f41: 0x45  E
-    2f42: 0x41  A
-    2f43: 0x53  S
-    2f44: 0x45  E
-    2f45: 0x53  S
+    2f2c: 0x41  ADDED TRAIN CARS INCREASES
     2f46: 0x00
-    2f47: 0x43  C
-    2f48: 0x52  R
-    2f49: 0x45  E
-    2f4a: 0x44  D
-    2f4b: 0x49  I
-    2f4c: 0x54  T
-    2f4d: 0x53  S
+    2f47: 0x43  CREDITS
     2f4e: 0x00
-    2f4f: 0x54  T
-    2f50: 0x4f  O
-    2f51: 0x50  P
-    2f52: 0x20   
-    2f53: 0x54  T
-    2f54: 0x48  H
-    2f55: 0x49  I
-    2f56: 0x53  S
-    2f57: 0x20   
-    2f58: 0x53  S
-    2f59: 0x43  C
-    2f5a: 0x4f  O
-    2f5b: 0x52  R
-    2f5c: 0x45  E
-    2f5d: 0x20   
-    2f5e: 0x46  F
-    2f5f: 0x4f  O
-    2f60: 0x52  R
-    2f61: 0x20   
-    2f62: 0x43  C
-    2f63: 0x52  R
-    2f64: 0x45  E
-    2f65: 0x44  D
-    2f66: 0x49  I
-    2f67: 0x54  T
+    2f4f: 0x54  TOP THIS SCORE FOR CREDIT
     2f68: 0x00
-    2f69: 0x50  P
-    2f6a: 0x4c  L
-    2f6b: 0x41  A
-    2f6c: 0x59  Y
-    2f6d: 0x45  E
-    2f6e: 0x52  R
-    2f6f: 0x20   
-    2f70: 0x31  1
+    2f69: 0x50  PLATER 1
     2f71: 0x00
-    2f72: 0x50  P
-    2f73: 0x4c  L
-    2f74: 0x41  A
-    2f75: 0x59  Y
-    2f76: 0x45  E
-    2f77: 0x52  R
-    2f78: 0x20   
-    2f79: 0x32  2
+    2f72: 0x50  PLAYER 2
     2f7a: 0x00
-    2f7b: 0x53  S
-    2f7c: 0x43  C
-    2f7d: 0x4f  O
-    2f7e: 0x52  R
-    2f7f: 0x45  E
+    2f7b: 0x53  SCORE
     2f80: 0x00
-    2f81: 0x42  B
-    2f82: 0x4f  O
-    2f83: 0x4e  N
-    2f84: 0x55  U
-    2f85: 0x53  S
+    2f81: 0x42  BONUS
     2f86: 0x00
-    2f87: 0x43  C
-    2f88: 0x4f  O
-    2f89: 0x50  P
-    2f8a: 0x59  Y
-    2f8b: 0x52  R
-    2f8c: 0x49  I
-    2f8d: 0x47  G
-    2f8e: 0x48  H
-    2f8f: 0x54  T
-    2f90: 0x20   
-    2f91: 0x6a  j
-    2f92: 0x20   
-    2f93: 0x31  1
-    2f94: 0x39  9
-    2f95: 0x37  7
-    2f96: 0x39  9
-    2f97: 0x20   
-    2f98: 0x42  B
-    2f99: 0x59  Y
-    2f9a: 0x20   
-    2f9b: 0x45  E
-    2f9c: 0x58  X
-    2f9d: 0x49  I
-    2f9e: 0x44  D
-    2f9f: 0x59  Y
-    2fa0: 0x20   
-    2fa1: 0x49  I
-    2fa2: 0x4e  N
-    2fa3: 0x43  C
+    2f87: 0x43  COPYRIGHT j 1977 BY EXIDY INC
     2fa4: 0x00
+
     2fa5: 0x00
     2fa6: 0x0a
     2fa7: 0x1c
@@ -1411,87 +1176,14 @@ trim_leading_zeros()
     3138: BNE *-4   -> 0x3136
     313a: RTS
     313b: NOP
-    313c: 0x23  #
-    313d: 0x01
-    313e: 0x01
-    313f: 0x01
-    3140: 0x01
-    3141: 0x01
-    3142: 0x01
-    3143: 0x01
-    3144: 0x01
-    3145: 0x01
-    3146: 0x01
-    3147: 0x01
-    3148: 0x01
-    3149: 0x01
-    314a: 0x01
-    314b: 0x01
 
-    314c: 0x00
-    314d: 0x20   
-    314e: 0x63  c
-    314f: 0x20   
-    3150: 0x63  c
-    3151: 0x20   
-    3152: 0x00
-    3153: 0x20   
-    3154: 0x63  c
-    3155: 0x20   
-    3156: 0x63  c
-    3157: 0x20   
-    3158: 0x00
-    3159: 0x20   
-    315a: 0x63  c
-    315b: 0x20   
-    315c: 0x00
-    315d: 0x63  c
-    315e: 0x20   
-    315f: 0x20   
-    3160: 0x20   
-    3161: 0x20   
-    3162: 0x00
-    3163: 0x20   
-    3164: 0x20   
-    3165: 0x20   
-    3166: 0x20   
-    3167: 0x20   
-    3168: 0x00
-    3169: 0x20   
-    316a: 0x20   
-    316b: 0x20   
-    316c: 0x00
-    316d: 0x20   
-    316e: 0x20   
-    316f: 0x23  #
-    3170: 0x01
-    3171: 0x01
-    3172: 0x01
-    3173: 0x01
-    3174: 0x01
-    3175: 0x01
-    3176: 0x01
-    3177: 0x01
-    3178: 0x01
-    3179: 0x01
-    317a: 0x01
-    317b: 0x01
-    317c: 0x00
-    317d: 0x63  c
-    317e: 0x20   
-    317f: 0x00
-    3180: 0x20   
-    3181: 0x64  d
-    3182: 0x20   
-    3183: 0x64  d
-    3184: 0x20   
-    3185: 0x00
-    3186: 0x20   
-    3187: 0x64  d
-    3188: 0x20   
-    3189: 0x64  d
-    318a: 0x20   
-    318b: 0x00
+    313c: 23, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01
+    314c: 00, 20, 63, 20, 63, 20, 00, 20, 63, 20, 63, 20, 00, 20, 63, 20
+	315c: 00, 63, 20, 20, 20, 20, 00, 20, 20, 20, 20, 20, 00, 20, 20, 20
+    316c: 00, 20, 20, 23, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01
+	317c: 00, 63, 20, 00, 20, 64, 20, 64, 20, 00, 20, 64, 20, 64, 20, 00
+
+
     318c: 0x00
     318d: 0x20   
     318e: 0x20   
@@ -1508,6 +1200,7 @@ trim_leading_zeros()
     3199: 0x20   
     319a: 0x20   
     319b: 0x00
+
     319c: 0x00
     319d: 0x01
     319e: 0x01
@@ -1524,6 +1217,7 @@ trim_leading_zeros()
     31a9: 0x01
     31aa: 0x01
     31ab: 0x01
+
     31ac: 0x00
     31ad: 0x20   
     31ae: 0x20   
@@ -1539,7 +1233,8 @@ trim_leading_zeros()
     31b8: 0x00
     31b9: 0x20   
     31ba: 0x65  e
-    31bb: 0x20   
+    31bb: 0x20  
+	
     31bc: 0x00
     31bd: 0x63  c
     31be: 0x20   
@@ -1555,7 +1250,8 @@ trim_leading_zeros()
     31c8: 0x00
     31c9: 0x20   
     31ca: 0x20   
-    31cb: 0x20   
+    31cb: 0x20  
+	
     31cc: 0x00
     31cd: 0x20   
     31ce: 0x20   
@@ -1572,6 +1268,7 @@ trim_leading_zeros()
     31d9: 0x01
     31da: 0x01
     31db: 0x01
+
     31dc: 0x00
     31dd: 0x63  c
     31de: 0x20   
@@ -1588,6 +1285,7 @@ trim_leading_zeros()
     31e9: 0x66  f
     31ea: 0x20   
     31eb: 0x00
+
     31ec: 0x00
     31ed: 0x20   
     31ee: 0x20   
@@ -1604,6 +1302,7 @@ trim_leading_zeros()
     31f9: 0x20   
     31fa: 0x20   
     31fb: 0x00
+
     31fc: 0x00
     31fd: 0x01
     31fe: 0x01
@@ -1620,6 +1319,7 @@ trim_leading_zeros()
     3209: 0x01
     320a: 0x01
     320b: 0x01
+
     320c: 0x00
     320d: 0x20   
     320e: 0x20   
@@ -1636,6 +1336,7 @@ trim_leading_zeros()
     3219: 0x20   
     321a: 0x67  g
     321b: 0x20   
+
     321c: 0x00
     321d: 0x63  c
     321e: 0x20   
@@ -1651,7 +1352,8 @@ trim_leading_zeros()
     3228: 0x00
     3229: 0x67  g
     322a: 0x20   
-    322b: 0x20   
+    322b: 0x20  
+	
     322c: 0x00
     322d: 0x20   
     322e: 0x20   
@@ -2125,30 +1827,31 @@ dec_xpos()
     35a3: LDA $5101  input_0
     35a6: EOR #ff
     35a8: PHA
-    35a9: AND #08
+    35a9: AND #08				; left
     35ab: BNE *25   -> 0x35c6
     35ad: NOP
     35ae: PLA
     35af: PHA
-    35b0: AND #04
+    35b0: AND #04				; right
     35b2: BNE *20   -> 0x35c8
     35b4: NOP
     35b5: PLA
     35b6: PHA
-    35b7: AND #20
+    35b7: AND #20				; up
     35b9: BNE *12   -> 0x35c7
     35bb: NOP
     35bc: PLA
     35bd: PHA
-    35be: AND #40
+    35be: AND #40				; down
     35c0: BNE *3   -> 0x35c5
     35c2: NOP
     35c3: PLA
     35c4: RTS
-    35c5: INX
-    35c6: INX
-    35c7: INX
-    35c8: PLA
+
+    35c5: INX						down	x = 3
+    35c6: INX						left	x = 2
+    35c7: INX						up		x = 1
+    35c8: PLA						right   x = 0
     35c9: JSR $3725
     35cc: STX $05
     35ce: LDA $46
