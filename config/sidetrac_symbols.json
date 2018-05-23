@@ -15,12 +15,6 @@
         {"start": "0x330e", "end": "0x38ea", "type": "code"},
         {"start": "0x38eb", "end": "0x3aa9", "type": "data"}
     ],
-    "variables": [
-      "0x13": {"name": "Credits", "size": "b"},
-      "0x0A": {"name": "p1_score", "size": "w"},
-      "0x0C": {"name": "p2_score", "size": "w"},
-      
-    ],
     "functions": {
       "0x29c5": { "name": "wait(x)" },
       "0x29cb": { "name": "wait()" },
@@ -37,15 +31,18 @@
       "0x2e73": { "name": "print_string(x)" },
       "0x2e87": { "name": "print_copyright()" },
       "0x2fc9": { "name": "print_scores()" },
+      "0x2fef": { "name": "increment_score()" },
       "0x304b": { "name": "print_BCD_word()" },
       "0x305c": { "name": "print_BCD_byte()" },
       "0x3070": { "name": "trim_leading_zeros()" },
       "0x323e": { "name": "draw_tracks()" },
       "0x330e": { "name": "inc_xpos()" },
-      "0x3316": { "name": "xpos_plus_3()" },
+      "0x3316": { "name": "xpos_plus_$3()" },
       "0x3323": { "name": "inc_word_25" },
       "0x3330": { "name": "dec_word_25" },
-      "0x333d": { "name": "dec_xpos()" }
+      "0x333d": { "name": "dec_xpos()" },
+      "0x36e5": { "name": "pickup_passenger_maybe()" },
+      "0x37b6": { "name": "move_player()" }
     },
     "ports": [
         {"addr": "0x5000", "name": "sprite1_xpos", "dir": "w"},
@@ -63,7 +60,17 @@
     ],
     "labels": {
         "0x29b9": "num_crashes_table",
-        "0x2cf9": "coinage_dipsw_table"
+        "0x2cf9": "coinage_dipsw_table",
+        "0x313c": "track_quadrant"
+    },
+    "variables": {
+        "0x0013": {"name": "Credits", "type": "byte"},
+        "0x000A": {"name": "p1_score", "type": "word"},
+        "0x000C": {"name": "p2_score", "type": "word"},      
+        "0x0069": {"name": "player_screen_address", "type": "word"},
+        "0x006C": {"name": "sprite", "type": "byte"},
+        "0x006F": {"name": "player_xpos", "type": "byte"},
+        "0x0070": {"name": "player_ypos", "type": "byte"}
     },
     "comments": {
         "0x2843": "Switch tracks to avoid",
@@ -89,6 +96,10 @@
         "0x2df3": "game over",
         "0x2fd8": "Player 1",
         "0x2fdd": "Player 2",
-        "0x30cd": "Bonus"
+        "0x30cd": "Bonus",
+        "0x313c": "0x23, 0x1F, 0x0C, 0x3d are corner pieces",
+        "0x313d": "0x01 is a horizontal piece",
+        "0x314c": "0x00 is a vertical piece",
+        "0x314e": "0x63-0x67 is a passenger"
     }
 }

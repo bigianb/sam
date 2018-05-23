@@ -1,0 +1,3069 @@
+Initial PC: 0x2800
+IRQ vector: 0x2b0e
+    2800: LDX #ff
+    2802: TXS
+    2803: STX $19
+    2805: STX $90
+    2807: CLD
+    2808: STX $14
+    280a: LDA #00
+    280c: STA $0f
+    280e: STA $10
+    2810: STA $13
+    2812: STA $06
+    2814: LDA #76
+    2816: STA $8f
+    2818: JSR $29fc  clear_video()
+    281b: JSR $323e  draw_tracks()
+    281e: JSR $2fc9  print_scores()
+    2821: JSR $2c1b
+    2824: JSR $3734
+    2827: JSR $334a
+    282a: CLI
+    282b: JSR $2d26
+    282e: JSR $29fc  clear_video()
+    2831: LDA $5100  dip_switches
+    2834: AND #03
+    2836: TAX
+    2837: LDA $29b9, X
+    283a: STA $0e
+    283c: JSR $298e
+    283f: LDX #05
+    2841: STX $89
+    2843: JSR $2e73  print_string(x)         ; Switch tracks to avoid
+    2846: LDX #06
+    2848: JSR $2e73  print_string(x)         ; crash with killer engine
+    284b: LDX #07
+    284d: JSR $2e73  print_string(x)         ; Pass starting point for
+    2850: JSR $2a1b  set_videopage_1()
+    2853: LDX #08
+    2855: JSR $2e73  print_string(x)         ; Bonus cars and score
+    2858: LDX #09
+    285a: JSR $2e73  print_string(x)         ; Added train cars increases
+    285d: LDX #0e
+    285f: JSR $2e73  print_string(x)         ; Score
+    2862: JSR $2a20  set_videopage_2()
+    2865: LDX #0a
+    2867: JSR $2e73  print_string(x)         ; Credits
+    286a: LDA $5100  dip_switches
+    286d: AND #10
+    286f: BEQ *36   -> 0x2895
+    2871: NOP
+    2872: LDA $14
+    2874: BNE *31   -> 0x2895
+    2876: NOP
+    2877: LDX #0b
+    2879: JSR $2e73  print_string(x)         ; Top this score for credit
+    287c: JSR $2a25  set_videopage_3()
+    287f: JSR $29d9
+    2882: AND #07
+    2884: TAX
+    2885: LDA $29bd, X
+    2888: STA $12
+    288a: LDA #00
+    288c: STA $11
+    288e: LDX #11
+    2890: LDY #30
+    2892: JSR $304b  print_BCD_word()
+    2895: JSR $2a25  set_videopage_3()
+    2898: JSR $2e87  print_copyright()
+    289b: JSR $2a20  set_videopage_2()
+    289e: JSR $2cb0  test_for_coin()
+    28a1: LDY #8f
+    28a3: LDX #13
+    28a5: JSR $305c  print_BCD_byte()        ; print num credits
+    28a8: JSR $2cfd  test_for_p1_start()
+    28ab: BEQ *24   -> 0x28c5
+    28ad: NOP
+    28ae: LDX $13
+    28b0: DEX
+    28b1: BMI *-21   -> 0x289e               ; no credit so loop
+    28b3: SED
+    28b4: LDA $13
+    28b6: SEC
+    28b7: SBC #01                            ; spend a credit
+    28b9: STA $13
+    28bb: CLD
+    28bc: JSR $2fc9  print_scores()
+    28bf: JSR $29fc  clear_video()
+    28c2: JMP $28df
+    28c5: LDA #02
+    28c7: JSR $2cff                          ; test if start 2 player pressed
+    28ca: BEQ *-46   -> 0x289e
+    28cc: LDX $13
+    28ce: DEX
+    28cf: DEX
+    28d0: BMI *-52   -> 0x289e               ; require 2 credits
+    28d2: SED
+    28d3: SEC
+    28d4: LDA $13
+    28d6: SBC #02                            ; spend 2 credits
+    28d8: STA $13
+    28da: CLD
+    28db: LDA #c0
+    28dd: STA $02
+    28df: LDA #80
+    28e1: JSR $2bee  audio_on()
+    28e4: JSR $2931
+    28e7: LDA #80
+    28e9: JSR $2bee  audio_on()
+    28ec: JSR $2a2e
+    28ef: LDA $8e
+    28f1: BMI *8   -> 0x28fb
+    28f3: NOP
+    28f4: BIT $02
+    28f6: BMI *-12   -> 0x28ec
+    28f8: JMP $282b
+    28fb: BIT $02
+    28fd: BVC *12   -> 0x290b
+    28ff: NOP
+    2900: LDA $02
+    2902: EOR #10
+    2904: STA $02
+    2906: AND #10
+    2908: BNE *24   -> 0x2922
+    290a: NOP
+    290b: DEC $0e
+    290d: BPL *19   -> 0x2922
+    290f: NOP
+    2910: LDA #00
+    2912: STA $02
+    2914: STA $0e
+    2916: LDA #00
+    2918: STA $8e
+    291a: LDX #02
+    291c: JSR $29c5  wait(x)
+    291f: JMP $282b
+    2922: JSR $2934
+    2925: LDA #00
+    2927: STA $8e
+    2929: LDA #80
+    292b: JSR $2bee  audio_on()
+    292e: JMP $28ec
+    2931: JSR $2fc9  print_scores()
+    2934: JSR $29fc  clear_video()
+    2937: JSR $2a1b  set_videopage_1()
+    293a: LDA $02
+    293c: AND #10
+    293e: BEQ *9   -> 0x2949
+    2940: NOP
+    2941: LDX #10
+    2943: JSR $2e73  print_string(x)         ; Player 2
+    2946: JMP $294e
+    2949: LDX #0f
+    294b: JSR $2e73  print_string(x)         ; Player 1
+    294e: JSR $2975
+    2951: LDX #01
+    2953: JSR $29c5  wait(x)
+    2956: JSR $30ff
+    2959: LDX #01
+    295b: JSR $29c5  wait(x)
+    295e: JSR $2c1b
+    2961: LDA #76
+    2963: STA $8f
+    2965: LDA #ff
+    2967: STA $90
+    2969: JSR $3734
+    296c: JSR $334a
+    296f: JSR $323e  draw_tracks()
+    2972: JSR $2a16  set_videopage_0()
+    2975: BIT $02
+    2977: BPL *20   -> 0x298d
+    2979: NOP
+    297a: BVC *4   -> 0x2980
+    297c: NOP
+    297d: JSR $298e
+    2980: JSR $29a3
+    2983: LDA $0e
+    2985: AND #0f
+    2987: LDY #0f
+    2989: ORA #30
+    298b: STA ($00), Y
+    298d: RTS
+    298e: JSR $2a16  set_videopage_0()
+    2991: LDY #16
+    2993: LDA #68
+    2995: STA ($00), Y
+    2997: INY
+    2998: LDA #32
+    299a: STA ($00), Y
+    299c: LDY #1c
+    299e: LDX #0c
+    29a0: JSR $304b  print_BCD_word()
+    29a3: JSR $2a16  set_videopage_0()
+    29a6: LDY #01
+    29a8: LDA #68
+    29aa: STA ($00), Y
+    29ac: INY
+    29ad: LDA #31
+    29af: STA ($00), Y
+    29b1: LDY #07
+    29b3: LDX #0a
+    29b5: JSR $304b  print_BCD_word()
+    29b8: RTS
+    29b9: 0x01
+    29ba: 0x02
+    29bb: 0x03
+    29bc: 0x04
+    29bd: 0x40  @
+    29be: 0x50  P
+    29bf: 0x55  U
+    29c0: 0x45  E
+    29c1: 0x26  &
+    29c2: 0x34  4
+    29c3: 0x70  p
+    29c4: 0x38  8
+
+wait(x)
+    29c5: JSR $29cc
+    29c8: DEX
+    29c9: BNE *-6   -> 0x29c5
+
+wait()
+    29cb: RTS
+    29cc: LDA #00
+    29ce: STA $15
+    29d0: DEC $16
+    29d2: BNE *-4   -> 0x29d0
+    29d4: DEC $15
+    29d6: BNE *-8   -> 0x29d0
+    29d8: RTS
+    29d9: TYA
+    29da: PHA
+    29db: LDY #17
+    29dd: LDA $1a
+    29df: AND #60
+    29e1: CMP #20
+    29e3: BEQ *10   -> 0x29ef
+    29e5: NOP
+    29e6: CMP #40
+    29e8: BEQ *5   -> 0x29ef
+    29ea: NOP
+    29eb: CLC
+    29ec: BCC *2   -> 0x29f0
+    29ee: NOP
+    29ef: SEC
+    29f0: ROL $19
+    29f2: ROL $1a
+    29f4: DEY
+    29f5: BNE *-26   -> 0x29dd
+    29f7: PLA
+    29f8: TAY
+    29f9: LDA $19
+    29fb: RTS
+
+clear_video()
+    29fc: JSR $2a25  set_videopage_3()
+    29ff: TAX
+    2a00: LDA #20
+    2a02: STA ($00, X)
+    2a04: DEC $00
+    2a06: BNE *-8   -> 0x2a00
+    2a08: DEC $01
+    2a0a: LDA $01
+    2a0c: CMP #3f
+    2a0e: BNE *-16   -> 0x2a00
+    2a10: LDA #ff
+    2a12: STA $5100  sprite_no
+    2a15: RTS
+
+set_videopage_0()
+    2a16: LDA #40
+    2a18: BNE *13   -> 0x2a27
+    2a1a: NOP
+
+set_videopage_1()
+    2a1b: LDA #41
+    2a1d: BNE *8   -> 0x2a27
+    2a1f: NOP
+
+set_videopage_2()
+    2a20: LDA #42
+    2a22: BNE *3   -> 0x2a27
+    2a24: NOP
+
+set_videopage_3()
+    2a25: LDA #43
+    2a27: STA $01
+    2a29: LDA #00
+    2a2b: STA $00
+    2a2d: RTS
+
+    2a2e: DEC $78
+    2a30: BNE *14   -> 0x2a40
+    2a32: NOP
+    2a33: LDA $77
+    2a35: STA $78
+    2a37: JSR $2aa4
+    2a3a: LDA $8e
+    2a3c: BPL *2   -> 0x2a40
+    2a3e: NOP
+    2a3f: RTS
+    2a40: LDX $45
+    2a42: CPX #09
+    2a44: BEQ *93   -> 0x2aa3
+    2a46: NOP
+    2a47: TXA
+    2a48: ASL A
+    2a49: TAX
+    2a4a: LDA $90
+    2a4c: BPL *25   -> 0x2a67
+    2a4e: NOP
+    2a4f: INX
+    2a50: LDA $30, X
+    2a52: CMP #43
+    2a54: BEQ *8   -> 0x2a5e
+    2a56: NOP
+    2a57: LDA #80
+    2a59: STA $7e
+    2a5b: JMP $2aa3
+    2a5e: LDA $7e
+    2a60: BMI *4   -> 0x2a66
+    2a62: NOP
+    2a63: JMP $2aa3
+    2a66: DEX
+    2a67: LDA $51
+    2a69: CMP #00
+    2a6b: BNE *54   -> 0x2aa3
+    2a6d: NOP
+    2a6e: LDA $30, X
+    2a70: CMP #ef
+    2a72: BNE *47   -> 0x2aa3
+    2a74: NOP
+    2a75: LDX $45
+    2a77: LDA $46, X
+    2a79: AND #03
+    2a7b: CMP #00
+    2a7d: BNE *36   -> 0x2aa3
+    2a7f: NOP
+    2a80: STA $7e
+    2a82: LDA $90
+    2a84: BMI *3   -> 0x2a89
+    2a86: NOP
+    2a87: DEC $90
+    2a89: INC $45
+    2a8b: LDX $45
+    2a8d: LDA #00
+    2a8f: STA $46, X
+    2a91: STA $52, X
+    2a93: TXA
+    2a94: ASL A
+    2a95: TAX
+    2a96: LDA #ed
+    2a98: STA $30, X
+    2a9a: INX
+    2a9b: LDA #43
+    2a9d: STA $30, X
+    2a9f: LDA #7f
+    2aa1: STA $88
+    2aa3: RTS
+    2aa4: DEC $7c
+    2aa6: BNE *51   -> 0x2adb
+    2aa8: NOP
+    2aa9: DEC $91
+    2aab: BNE *33   -> 0x2ace
+    2aad: NOP
+    2aae: STA $91
+    2ab0: AND #01
+    2ab2: BEQ *15   -> 0x2ac3
+    2ab4: NOP
+    2ab5: DEC $92
+    2ab7: LDA $92
+    2ab9: CMP #01
+    2abb: BNE *17   -> 0x2ace
+    2abd: NOP
+    2abe: INC $92
+    2ac0: JMP $2ace
+    2ac3: INC $92
+    2ac5: LDA $92
+    2ac7: CMP #05
+    2ac9: BNE *3   -> 0x2ace
+    2acb: NOP
+    2acc: DEC $92
+    2ace: LDA $92
+    2ad0: STA $7c
+    2ad2: JSR $375a
+    2ad5: LDA $8e
+    2ad7: BPL *2   -> 0x2adb
+    2ad9: NOP
+    2ada: RTS
+    2adb: DEC $7d
+    2add: BNE *41   -> 0x2b08
+    2adf: NOP
+    2ae0: BIT $02
+    2ae2: BPL *16   -> 0x2af4
+    2ae4: NOP
+    2ae5: LDA $5101  input_0
+    2ae8: AND #10
+    2aea: BEQ *8   -> 0x2af4
+    2aec: NOP
+    2aed: LDA #05
+    2aef: STA $7d
+    2af1: JMP $2af8
+    2af4: LDA #03
+    2af6: STA $7d
+    2af8: DEC $89
+    2afa: BNE *9   -> 0x2b05
+    2afc: NOP
+    2afd: LDA #08
+    2aff: STA $89
+    2b01: LDA #c0
+    2b03: STA $8a
+    2b05: JSR $3361
+    2b08: RTS
+    2b09: 0xcc
+    2b0a: 0xc9
+    2b0b: 0xc4
+    2b0c: 0xc2
+    2b0d: 0xc2
+
+IRQ_Handler
+    2b0e: PHP
+    2b0f: PHA
+    2b10: TXA
+    2b11: PHA
+    2b12: TYA
+    2b13: PHA
+    2b14: LDA $07
+    2b16: CMP #ef
+    2b18: BCC *13   -> 0x2b27
+    2b1a: NOP
+    2b1b: CMP #f4
+    2b1d: BCS *6   -> 0x2b25
+    2b1f: NOP
+    2b20: LDA #ef
+    2b22: JMP $2b27
+    2b25: LDA #00
+    2b27: STA $5000  sprite1_xpos
+    2b2a: LDA $08
+    2b2c: STA $5040  sprite1_ypos
+    2b2f: JSR $2bf6
+    2b32: JSR $2b63
+    2b35: LDA $15
+    2b37: BEQ *4   -> 0x2b3d
+    2b39: NOP
+    2b3a: JMP $2b42
+    2b3d: LDA $16
+    2b3f: BEQ *6   -> 0x2b47
+    2b41: NOP
+    2b42: LDA #00
+    2b44: JMP $2b56
+    2b47: DEC $80
+    2b49: BNE *14   -> 0x2b59
+    2b4b: NOP
+    2b4c: LDA $7f
+    2b4e: STA $80
+    2b50: LDA $81
+    2b52: EOR #01
+    2b54: STA $81
+    2b56: STA $5201  audio_2
+    2b59: LDA $5103  int_latch
+    2b5c: PLA
+    2b5d: TAY
+    2b5e: PLA
+    2b5f: TAX
+    2b60: PLA
+    2b61: PLP
+    2b62: RTI
+    2b63: LDA $02
+    2b65: BMI *2   -> 0x2b69
+    2b67: NOP
+    2b68: RTS
+    2b69: JSR $2ba8
+    2b6c: JSR $2b8f
+    2b6f: JSR $2b73
+    2b72: RTS
+    2b73: BIT $8a
+    2b75: BPL *23   -> 0x2b8e
+    2b77: NOP
+    2b78: BVC *11   -> 0x2b85
+    2b7a: NOP
+    2b7b: LDA #20
+    2b7d: JSR $2bee  audio_on()
+    2b80: LDA #80
+    2b82: STA $8a
+    2b84: RTS
+    2b85: LDA #df
+    2b87: JSR $2be9  audio_off()
+    2b8a: LDA #00
+    2b8c: STA $8a
+    2b8e: RTS
+    2b8f: DEC $88
+    2b91: BNE *9   -> 0x2b9c
+    2b93: NOP
+    2b94: INC $88
+    2b96: LDA #ef
+    2b98: JSR $2be9  audio_off()
+    2b9b: RTS
+    2b9c: LDA $88
+    2b9e: AND #20
+    2ba0: BEQ *-12   -> 0x2b96
+    2ba2: LDA #10
+    2ba4: JSR $2bee  audio_on()
+    2ba7: RTS
+    2ba8: LDA $84
+    2baa: BIT $84
+    2bac: BPL *19   -> 0x2bc1
+    2bae: NOP
+    2baf: AND #7f
+    2bb1: STA $84
+    2bb3: AND #0f
+    2bb5: JSR $2bee  audio_on()
+    2bb8: LDA #02
+    2bba: STA $85
+    2bbc: LDA #10
+    2bbe: STA $86
+    2bc0: RTS
+    2bc1: BVC *37   -> 0x2be8
+    2bc3: NOP
+    2bc4: DEC $85
+    2bc6: BEQ *9   -> 0x2bd1
+    2bc8: NOP
+    2bc9: AND #0f
+    2bcb: ORA #02
+    2bcd: JSR $2bee  audio_on()
+    2bd0: RTS
+    2bd1: LDA #fd
+    2bd3: JSR $2be9  audio_off()
+    2bd6: LDA #01
+    2bd8: STA $85
+    2bda: DEC $86
+    2bdc: BNE *10   -> 0x2be8
+    2bde: NOP
+    2bdf: LDA #f1
+    2be1: JSR $2be9  audio_off()
+    2be4: LDA #00
+    2be6: STA $84
+    2be8: RTS
+
+audio_off()
+    2be9: AND $87
+    2beb: JMP $2bf0
+
+audio_on()
+    2bee: ORA $87
+    2bf0: STA $87
+    2bf2: STA $5200  audio_1
+    2bf5: RTS
+    2bf6: DEC $82
+    2bf8: BNE *32   -> 0x2c1a
+    2bfa: NOP
+    2bfb: LDA #a0
+    2bfd: STA $82
+    2bff: DEC $77
+    2c01: BNE *3   -> 0x2c06
+    2c03: NOP
+    2c04: INC $77
+    2c06: DEC $83
+    2c08: BNE *16   -> 0x2c1a
+    2c0a: NOP
+    2c0b: LDA #07
+    2c0d: STA $83
+    2c0f: DEC $7f
+    2c11: LDA $7f
+    2c13: CMP #01
+    2c15: BNE *3   -> 0x2c1a
+    2c17: NOP
+    2c18: INC $7f
+    2c1a: RTS
+    2c1b: LDA #14
+    2c1d: STA $7f
+    2c1f: LDA #50
+    2c21: STA $77
+    2c23: LDA #07
+    2c25: STA $83
+    2c27: LDA #02
+    2c29: STA $7c
+    2c2b: STA $7d
+    2c2d: STA $83
+    2c2f: LDA #00
+    2c31: STA $8e
+    2c33: LDA #02
+    2c35: STA $92
+    2c37: LDA #00
+    2c39: STA $87
+    2c3b: RTS
+
+    2c3c: LDY #00
+    2c3e: LDA #20
+    2c40: STA ($69), Y
+    2c42: LDA $69
+    2c44: ASL A
+    2c45: ASL A
+    2c46: ASL A
+    2c47: EOR #ff
+    2c49: CLC
+    2c4a: ADC #ed
+    2c4c: STA $07
+    2c4e: LDA $69
+    2c50: LSR $6a
+    2c52: ROR A
+    2c53: LSR $6a
+    2c55: ROR A
+    2c56: AND #f8
+    2c58: EOR #ff
+    2c5a: CLC
+    2c5b: ADC #f6
+    2c5d: STA $08
+    2c5f: LDX #00
+    2c61: LDY #0c
+    2c63: DEX
+    2c64: BNE *-3   -> 0x2c63
+    2c66: DEY
+    2c67: BNE *-6   -> 0x2c63
+    2c69: SEI
+    2c6a: BIT $02
+    2c6c: BPL *18   -> 0x2c80
+    2c6e: NOP
+    2c6f: LDA #00
+    2c71: JSR $2be9  audio_off()
+    2c74: LDA #c0
+    2c76: JSR $2bee  audio_on()
+    2c79: LDA #c0
+    2c7b: STA $8a
+    2c7d: JSR $2b73
+    2c80: LDA #f4
+    2c82: STA $8b
+    2c84: STA $5100  sprite_no
+    2c87: LDA #30
+    2c89: STA $8d
+    2c8b: DEC $8c
+    2c8d: BNE *-4   -> 0x2c8b
+    2c8f: DEC $8d
+    2c91: BNE *-8   -> 0x2c8b
+    2c93: INC $8b
+    2c95: LDA $8b
+    2c97: CMP #f5
+    2c99: BNE *6   -> 0x2ca1
+    2c9b: NOP
+    2c9c: JSR $2b63
+    2c9f: LDA $8b
+    2ca1: CMP #fb
+    2ca3: BNE *-33   -> 0x2c84
+    2ca5: LDA #bf
+    2ca7: JSR $2be9  audio_off()
+    2caa: CLI
+    2cab: LDA #ff
+    2cad: STA $8e
+    2caf: RTS
+
+test_for_coin()
+    2cb0: LDA $5101  input_0
+    2cb3: BPL *4   -> 0x2cb9
+    2cb5: NOP
+    2cb6: LDA #00
+    2cb8: RTS
+    2cb9: LDA #ff
+    2cbb: STA $03
+    2cbd: LDA $5101  input_0
+    2cc0: BMI *-18   -> 0x2cb0
+    2cc2: DEC $03
+    2cc4: BNE *-9   -> 0x2cbd
+    2cc6: LDA $5101  input_0
+    2cc9: BMI *3   -> 0x2cce
+    2ccb: NOP
+    2ccc: BPL *-8   -> 0x2cc6
+    2cce: DEC $03
+    2cd0: LDA $5101  input_0
+    2cd3: BPL *-15   -> 0x2cc6
+    2cd5: DEC $03
+    2cd7: BNE *-9   -> 0x2cd0
+    2cd9: LDA $5100  dip_switches
+    2cdc: AND #0c
+    2cde: LSR A
+    2cdf: LSR A
+    2ce0: TAX
+    2ce1: LDA $2cf9, X
+    2ce4: CLC
+    2ce5: ADC $06
+    2ce7: STA $06
+    2ce9: LSR A
+    2cea: BEQ *12   -> 0x2cf8
+    2cec: NOP
+    2ced: SED
+    2cee: CLC
+    2cef: ADC $13
+    2cf1: STA $13
+    2cf3: CLD
+    2cf4: LDA #00
+    2cf6: STA $06
+    2cf8: RTS
+    2cf9: 0x04
+    2cfa: 0x02
+    2cfb: 0x01
+    2cfc: 0x01
+
+test_for_p1_start()
+    2cfd: LDA #01
+    2cff: STA $04
+    2d01: JSR $2d05
+    2d04: RTS
+    2d05: LDA $5101  input_0
+    2d08: EOR #ff
+    2d0a: AND $04
+    2d0c: BNE *4   -> 0x2d12
+    2d0e: NOP
+    2d0f: LDA #00
+    2d11: RTS
+    2d12: LDA #ff
+    2d14: STA $03
+    2d16: LDA $5101  input_0
+    2d19: EOR #ff
+    2d1b: AND $04
+    2d1d: BEQ *-26   -> 0x2d05
+    2d1f: DEC $03
+    2d21: BNE *-13   -> 0x2d16
+    2d23: LDA #ff
+    2d25: RTS
+    2d26: LDA $5100  dip_switches
+    2d29: AND #10
+    2d2b: BEQ *38   -> 0x2d53
+    2d2d: NOP
+    2d2e: LDA $14
+    2d30: BNE *33   -> 0x2d53
+    2d32: NOP
+    2d33: LDA $0b
+    2d35: CMP $12
+    2d37: BCC *3   -> 0x2d3c
+    2d39: NOP
+    2d3a: INC $14
+    2d3c: LDA $0d
+    2d3e: CMP $12
+    2d40: BCC *3   -> 0x2d45
+    2d42: NOP
+    2d43: INC $14
+    2d45: LDA $14
+    2d47: SED
+    2d48: CLC
+    2d49: ADC $13
+    2d4b: STA $13
+    2d4d: CLD
+    2d4e: LDA #00
+    2d50: JMP $2d57
+    2d53: LDA #00
+    2d55: STA $14
+    2d57: LDA $10
+    2d59: CMP $0b
+    2d5b: BNE *5   -> 0x2d62
+    2d5d: NOP
+    2d5e: LDA $0f
+    2d60: CMP $0a
+    2d62: BCS *9   -> 0x2d6d
+    2d64: NOP
+    2d65: LDA $0b
+    2d67: STA $10
+    2d69: LDA $0a
+    2d6b: STA $0f
+    2d6d: LDA $10
+    2d6f: CMP $0d
+    2d71: BNE *5   -> 0x2d78
+    2d73: NOP
+    2d74: LDA $0f
+    2d76: CMP $0c
+    2d78: BCS *9   -> 0x2d83
+    2d7a: NOP
+    2d7b: LDA $0d
+    2d7d: STA $10
+    2d7f: LDA $0c
+    2d81: STA $0f
+    2d83: JSR $2d89
+    2d86: JMP $2e02
+    2d89: JSR $29fc  clear_video()
+    2d8c: JSR $2a16  set_videopage_0()
+    2d8f: LDX #02
+    2d91: JSR $2e73  print_string(x)         ; Side Track
+    2d94: LDX #01
+    2d96: JSR $2e73  print_string(x)         ; Todays high score
+    2d99: LDY #f0
+    2d9b: LDX #0f
+    2d9d: JSR $304b  print_BCD_word()
+    2da0: JSR $2fd3
+    2da3: JSR $2a20  set_videopage_2()
+    2da6: LDX #03
+    2da8: JSR $2e73  print_string(x)         ; 1 coin iii 1 play
+    2dab: LDX #04
+    2dad: JSR $2e73  print_string(x)         ; 1 coin iii 1 play
+    2db0: LDA $5100  dip_switches
+    2db3: AND #0c
+    2db5: CMP #00
+    2db7: BEQ *25   -> 0x2dd2
+    2db9: NOP
+    2dba: CMP #04
+    2dbc: BEQ *41   -> 0x2de7
+    2dbe: NOP
+    2dbf: LDA #32
+    2dc1: LDY #07
+    2dc3: STA ($00), Y
+    2dc5: LDY #52
+    2dc7: STA ($00), Y
+    2dc9: LDA #34
+    2dcb: LDY #47
+    2dcd: STA ($00), Y
+    2dcf: JMP $2df1
+    2dd2: LDA #32
+    2dd4: LDY #12
+    2dd6: STA ($00), Y
+    2dd8: LDY #57
+    2dda: LDX #10
+    2ddc: LDA #20
+    2dde: STA ($00), Y
+    2de0: DEY
+    2de1: DEX
+    2de2: BPL *-6   -> 0x2dde
+    2de4: JMP $2df1
+    2de7: LDA #32
+    2de9: LDY #47
+    2deb: STA ($00), Y
+    2ded: LDY #52
+    2def: STA ($00), Y
+    2df1: LDX #00
+    2df3: JSR $2e73  print_string(x)         ; game over
+    2df6: JSR $2a25  set_videopage_3()
+    2df9: JSR $2e87  print_copyright()
+    2dfc: LDA #00
+    2dfe: JSR $2be9  audio_off()
+    2e01: RTS
+    2e02: LDA #00
+    2e04: STA $02
+    2e06: LDA #ff
+    2e08: STA $5100  sprite_no
+    2e0b: JSR $2e58
+    2e0e: LDA $13
+    2e10: BNE *92   -> 0x2e6e
+    2e12: NOP
+    2e13: JSR $3734
+    2e16: JSR $334a
+    2e19: JSR $2cb0  test_for_coin()
+    2e1c: LDA $13
+    2e1e: BNE *78   -> 0x2e6e
+    2e20: NOP
+    2e21: JSR $323e  draw_tracks()
+    2e24: JSR $298e
+    2e27: JSR $2cb0  test_for_coin()
+    2e2a: LDA $13
+    2e2c: BNE *64   -> 0x2e6e
+    2e2e: NOP
+    2e2f: LDA #30
+    2e31: STA $77
+    2e33: JSR $2a2e
+    2e36: LDA $8e
+    2e38: BPL *8   -> 0x2e42
+    2e3a: NOP
+    2e3b: JSR $295e
+    2e3e: LDA #00
+    2e40: STA $8e
+    2e42: JSR $2cb0  test_for_coin()
+    2e45: LDA $13
+    2e47: BNE *37   -> 0x2e6e
+    2e49: NOP
+    2e4a: DEC $16
+    2e4c: BNE *-27   -> 0x2e33
+    2e4e: DEC $15
+    2e50: BNE *-31   -> 0x2e33
+    2e52: JSR $2d89
+    2e55: JMP $2e06
+    2e58: LDA #00
+    2e5a: STA $15
+    2e5c: JSR $2cb0  test_for_coin()
+    2e5f: LDA $13
+    2e61: BEQ *2   -> 0x2e65
+    2e63: NOP
+    2e64: RTS
+    2e65: DEC $16
+    2e67: BNE *-13   -> 0x2e5c
+    2e69: DEC $15
+    2e6b: BNE *-17   -> 0x2e5c
+    2e6d: RTS
+    2e6e: LDA #80
+    2e70: STA $02
+    2e72: RTS
+
+print_string(x)
+    2e73: LDY $2fb7, X
+    2e76: LDA $2fa5, X
+    2e79: TAX
+    2e7a: LDA $2e96, X
+    2e7d: BEQ *7   -> 0x2e86
+    2e7f: NOP
+    2e80: STA ($00), Y
+    2e82: INX
+    2e83: INY
+    2e84: BNE *-12   -> 0x2e7a
+    2e86: RTS
+
+print_copyright()
+    2e87: LDY #a1
+    2e89: LDX #00
+    2e8b: LDA $2f87, X
+    2e8e: BEQ *-10   -> 0x2e86
+    2e90: STA ($00), Y
+    2e92: INX
+    2e93: INY
+    2e94: BNE *-11   -> 0x2e8b
+    2e96: 0x47  G
+    2e97: 0x41  A
+    2e98: 0x4d  M
+    2e99: 0x45  E
+    2e9a: 0x20   
+    2e9b: 0x4f  O
+    2e9c: 0x56  V
+    2e9d: 0x45  E
+    2e9e: 0x52  R
+    2e9f: 0x00
+    2ea0: 0x54  T
+    2ea1: 0x4f  O
+    2ea2: 0x44  D
+    2ea3: 0x41  A
+    2ea4: 0x59  Y
+    2ea5: 0x53  S
+    2ea6: 0x20   
+    2ea7: 0x48  H
+    2ea8: 0x49  I
+    2ea9: 0x47  G
+    2eaa: 0x48  H
+    2eab: 0x20   
+    2eac: 0x53  S
+    2ead: 0x43  C
+    2eae: 0x4f  O
+    2eaf: 0x52  R
+    2eb0: 0x45  E
+    2eb1: 0x00
+    2eb2: 0x53  S
+    2eb3: 0x49  I
+    2eb4: 0x44  D
+    2eb5: 0x45  E
+    2eb6: 0x20   
+    2eb7: 0x54  T
+    2eb8: 0x52  R
+    2eb9: 0x41  A
+    2eba: 0x43  C
+    2ebb: 0x4b  K
+    2ebc: 0x00
+    2ebd: 0x31  1
+    2ebe: 0x20   
+    2ebf: 0x43  C
+    2ec0: 0x4f  O
+    2ec1: 0x49  I
+    2ec2: 0x4e  N
+    2ec3: 0x20   
+    2ec4: 0x69  i
+    2ec5: 0x69  i
+    2ec6: 0x69  i
+    2ec7: 0x20   
+    2ec8: 0x31  1
+    2ec9: 0x20   
+    2eca: 0x50  P
+    2ecb: 0x4c  L
+    2ecc: 0x41  A
+    2ecd: 0x59  Y
+    2ece: 0x00
+    2ecf: 0x53  S
+    2ed0: 0x57  W
+    2ed1: 0x49  I
+    2ed2: 0x54  T
+    2ed3: 0x43  C
+    2ed4: 0x48  H
+    2ed5: 0x20   
+    2ed6: 0x54  T
+    2ed7: 0x52  R
+    2ed8: 0x41  A
+    2ed9: 0x43  C
+    2eda: 0x4b  K
+    2edb: 0x53  S
+    2edc: 0x20   
+    2edd: 0x54  T
+    2ede: 0x4f  O
+    2edf: 0x20   
+    2ee0: 0x41  A
+    2ee1: 0x56  V
+    2ee2: 0x4f  O
+    2ee3: 0x49  I
+    2ee4: 0x44  D
+    2ee5: 0x00
+    2ee6: 0x43  C
+    2ee7: 0x52  R
+    2ee8: 0x41  A
+    2ee9: 0x53  S
+    2eea: 0x48  H
+    2eeb: 0x20   
+    2eec: 0x57  W
+    2eed: 0x49  I
+    2eee: 0x54  T
+    2eef: 0x48  H
+    2ef0: 0x20   
+    2ef1: 0x4b  K
+    2ef2: 0x49  I
+    2ef3: 0x4c  L
+    2ef4: 0x4c  L
+    2ef5: 0x45  E
+    2ef6: 0x52  R
+    2ef7: 0x20   
+    2ef8: 0x45  E
+    2ef9: 0x4e  N
+    2efa: 0x47  G
+    2efb: 0x49  I
+    2efc: 0x4e  N
+    2efd: 0x45  E
+    2efe: 0x00
+    2eff: 0x50  P
+    2f00: 0x41  A
+    2f01: 0x53  S
+    2f02: 0x53  S
+    2f03: 0x20   
+    2f04: 0x53  S
+    2f05: 0x54  T
+    2f06: 0x41  A
+    2f07: 0x52  R
+    2f08: 0x54  T
+    2f09: 0x49  I
+    2f0a: 0x4e  N
+    2f0b: 0x47  G
+    2f0c: 0x20   
+    2f0d: 0x50  P
+    2f0e: 0x4f  O
+    2f0f: 0x49  I
+    2f10: 0x4e  N
+    2f11: 0x54  T
+    2f12: 0x20   
+    2f13: 0x46  F
+    2f14: 0x4f  O
+    2f15: 0x52  R
+    2f16: 0x00
+    2f17: 0x42  B
+    2f18: 0x4f  O
+    2f19: 0x4e  N
+    2f1a: 0x55  U
+    2f1b: 0x53  S
+    2f1c: 0x20   
+    2f1d: 0x43  C
+    2f1e: 0x41  A
+    2f1f: 0x52  R
+    2f20: 0x53  S
+    2f21: 0x20   
+    2f22: 0x41  A
+    2f23: 0x4e  N
+    2f24: 0x44  D
+    2f25: 0x20   
+    2f26: 0x53  S
+    2f27: 0x43  C
+    2f28: 0x4f  O
+    2f29: 0x52  R
+    2f2a: 0x45  E
+    2f2b: 0x00
+    2f2c: 0x41  A
+    2f2d: 0x44  D
+    2f2e: 0x44  D
+    2f2f: 0x45  E
+    2f30: 0x44  D
+    2f31: 0x20   
+    2f32: 0x54  T
+    2f33: 0x52  R
+    2f34: 0x41  A
+    2f35: 0x49  I
+    2f36: 0x4e  N
+    2f37: 0x20   
+    2f38: 0x43  C
+    2f39: 0x41  A
+    2f3a: 0x52  R
+    2f3b: 0x53  S
+    2f3c: 0x20   
+    2f3d: 0x49  I
+    2f3e: 0x4e  N
+    2f3f: 0x43  C
+    2f40: 0x52  R
+    2f41: 0x45  E
+    2f42: 0x41  A
+    2f43: 0x53  S
+    2f44: 0x45  E
+    2f45: 0x53  S
+    2f46: 0x00
+    2f47: 0x43  C
+    2f48: 0x52  R
+    2f49: 0x45  E
+    2f4a: 0x44  D
+    2f4b: 0x49  I
+    2f4c: 0x54  T
+    2f4d: 0x53  S
+    2f4e: 0x00
+    2f4f: 0x54  T
+    2f50: 0x4f  O
+    2f51: 0x50  P
+    2f52: 0x20   
+    2f53: 0x54  T
+    2f54: 0x48  H
+    2f55: 0x49  I
+    2f56: 0x53  S
+    2f57: 0x20   
+    2f58: 0x53  S
+    2f59: 0x43  C
+    2f5a: 0x4f  O
+    2f5b: 0x52  R
+    2f5c: 0x45  E
+    2f5d: 0x20   
+    2f5e: 0x46  F
+    2f5f: 0x4f  O
+    2f60: 0x52  R
+    2f61: 0x20   
+    2f62: 0x43  C
+    2f63: 0x52  R
+    2f64: 0x45  E
+    2f65: 0x44  D
+    2f66: 0x49  I
+    2f67: 0x54  T
+    2f68: 0x00
+    2f69: 0x50  P
+    2f6a: 0x4c  L
+    2f6b: 0x41  A
+    2f6c: 0x59  Y
+    2f6d: 0x45  E
+    2f6e: 0x52  R
+    2f6f: 0x20   
+    2f70: 0x31  1
+    2f71: 0x00
+    2f72: 0x50  P
+    2f73: 0x4c  L
+    2f74: 0x41  A
+    2f75: 0x59  Y
+    2f76: 0x45  E
+    2f77: 0x52  R
+    2f78: 0x20   
+    2f79: 0x32  2
+    2f7a: 0x00
+    2f7b: 0x53  S
+    2f7c: 0x43  C
+    2f7d: 0x4f  O
+    2f7e: 0x52  R
+    2f7f: 0x45  E
+    2f80: 0x00
+    2f81: 0x42  B
+    2f82: 0x4f  O
+    2f83: 0x4e  N
+    2f84: 0x55  U
+    2f85: 0x53  S
+    2f86: 0x00
+    2f87: 0x43  C
+    2f88: 0x4f  O
+    2f89: 0x50  P
+    2f8a: 0x59  Y
+    2f8b: 0x52  R
+    2f8c: 0x49  I
+    2f8d: 0x47  G
+    2f8e: 0x48  H
+    2f8f: 0x54  T
+    2f90: 0x20   
+    2f91: 0x6a  j
+    2f92: 0x20   
+    2f93: 0x31  1
+    2f94: 0x39  9
+    2f95: 0x37  7
+    2f96: 0x39  9
+    2f97: 0x20   
+    2f98: 0x42  B
+    2f99: 0x59  Y
+    2f9a: 0x20   
+    2f9b: 0x45  E
+    2f9c: 0x58  X
+    2f9d: 0x49  I
+    2f9e: 0x44  D
+    2f9f: 0x59  Y
+    2fa0: 0x20   
+    2fa1: 0x49  I
+    2fa2: 0x4e  N
+    2fa3: 0x43  C
+    2fa4: 0x00
+    2fa5: 0x00
+    2fa6: 0x0a
+    2fa7: 0x1c
+    2fa8: 0x27  '
+    2fa9: 0x27  '
+    2faa: 0x39  9
+    2fab: 0x50  P
+    2fac: 0x69  i
+    2fad: 0x81
+    2fae: 0x96
+    2faf: 0xb1
+    2fb0: 0xb9
+    2fb1: 0xd3
+    2fb2: 0xdc
+    2fb3: 0xe5
+    2fb4: 0xd3
+    2fb5: 0xdc
+    2fb6: 0xeb
+    2fb7: 0xcb
+    2fb8: 0xa7
+    2fb9: 0x4b  K
+    2fba: 0x07
+    2fbb: 0x47  G
+    2fbc: 0x44  D
+    2fbd: 0x84
+    2fbe: 0xe4
+    2fbf: 0x24  $
+    2fc0: 0x84
+    2fc1: 0x4c  L
+    2fc2: 0xe3
+    2fc3: 0x24  $
+    2fc4: 0x33  3
+    2fc5: 0xc4
+    2fc6: 0xcb
+    2fc7: 0xcb
+    2fc8: 0xcd
+
+print_scores()
+    2fc9: LDA #00
+    2fcb: LDY #03
+    2fcd: STA $000a, Y
+    2fd0: DEY
+    2fd1: BPL *-6   -> 0x2fcd
+    2fd3: JSR $2a1b  set_videopage_1()
+    2fd6: LDX #0c
+    2fd8: JSR $2e73  print_string(x)         ; Player 1
+    2fdb: LDX #0d
+    2fdd: JSR $2e73  print_string(x)         ; Player 2
+    2fe0: LDX #0a
+    2fe2: LDY #89
+    2fe4: JSR $304b  print_BCD_word()
+    2fe7: LDX #0c
+    2fe9: LDY #98
+    2feb: JSR $304b  print_BCD_word()
+    2fee: RTS
+
+increment_score()
+    2fef: LDA $02
+    2ff1: BMI *2   -> 0x2ff5
+    2ff3: NOP
+    2ff4: RTS
+    2ff5: JSR $29d9
+    2ff8: AND #07
+    2ffa: CMP $17
+    2ffc: BNE *4   -> 0x3002
+    2ffe: NOP
+    2fff: JSR $2bff
+    3002: LDX $17
+    3004: DEX
+    3005: LDA $2b09, X
+    3008: STA $84
+    300a: LDY $45
+    300c: DEY
+    300d: BMI *20   -> 0x3023
+    300f: NOP
+    3010: SED
+    3011: LDA $17
+    3013: PHA
+    3014: ADC $17
+    3016: STA $17
+    3018: LDA $18
+    301a: ADC #00
+    301c: STA $18
+    301e: PLA
+    301f: DEY
+    3020: BPL *-15   -> 0x3013
+    3022: CLD
+    3023: JSR $2a16  set_videopage_0()
+    3026: LDX #0a
+    3028: LDY #07
+    302a: LDA $02
+    302c: AND #10
+    302e: BEQ *5   -> 0x3035
+    3030: NOP
+    3031: LDX #0c
+    3033: LDY #1c
+    3035: LDA $00, X
+    3037: SED
+    3038: CLC
+    3039: ADC $17
+    303b: STA $00, X
+    303d: LDA $01, X
+    303f: ADC $18
+    3041: STA $01, X
+    3043: CLD
+    3044: JSR $304b  print_BCD_word()
+    3047: JSR $30b6
+    304a: RTS
+
+print_BCD_word()
+    304b: JSR $305c  print_BCD_byte()
+    304e: INX
+    304f: DEY
+    3050: JSR $305c  print_BCD_byte()
+    3053: JSR $3070  trim_leading_zeros()
+    3056: INY
+    3057: LDA #30
+    3059: STA ($00), Y
+    305b: RTS
+
+print_BCD_byte()
+    305c: LDA $00, X
+    305e: AND #0f
+    3060: ORA #30
+    3062: STA ($00), Y
+    3064: LDA $00, X
+    3066: LSR A
+    3067: LSR A
+    3068: LSR A
+    3069: LSR A
+    306a: ORA #30
+    306c: DEY
+    306d: STA ($00), Y
+    306f: RTS
+
+trim_leading_zeros()
+    3070: LDX #01
+    3072: LDA ($00), Y
+    3074: CMP #30
+    3076: BNE *4   -> 0x307c
+    3078: NOP
+    3079: JSR $30af
+    307c: INY
+    307d: CPX #00
+    307f: BNE *13   -> 0x308e
+    3081: NOP
+    3082: LDX #01
+    3084: LDA ($00), Y
+    3086: CMP #30
+    3088: BNE *4   -> 0x308e
+    308a: NOP
+    308b: JSR $30af
+    308e: INY
+    308f: CPX #00
+    3091: BNE *13   -> 0x30a0
+    3093: NOP
+    3094: LDX #01
+    3096: LDA ($00), Y
+    3098: CMP #30
+    309a: BNE *4   -> 0x30a0
+    309c: NOP
+    309d: JSR $30af
+    30a0: INY
+    30a1: CPX #00
+    30a3: BNE *16   -> 0x30b5
+    30a5: NOP
+    30a6: LDX #01
+    30a8: LDA ($00), Y
+    30aa: CMP #30
+    30ac: BNE *7   -> 0x30b5
+    30ae: NOP
+    30af: LDA #20
+    30b1: STA ($00), Y
+    30b3: LDX $00
+    30b5: RTS
+    30b6: DEC $8f
+    30b8: BEQ *2   -> 0x30bc
+    30ba: NOP
+    30bb: RTS
+    30bc: SEI
+    30bd: LDA #ff
+    30bf: STA $5100  sprite_no
+    30c2: JSR $30eb
+    30c5: JSR $29fc  clear_video()
+    30c8: JSR $2a1b  set_videopage_1()
+    30cb: LDX #11
+    30cd: JSR $2e73  print_string(x)         ; Bonus
+    30d0: JSR $30eb
+    30d3: LDA $45
+    30d5: STA $90
+    30d7: DEC $90
+    30d9: JSR $323e  draw_tracks()
+    30dc: JSR $3734
+    30df: JSR $334a
+    30e2: JSR $2975
+    30e5: LDA #76
+    30e7: STA $8f
+    30e9: CLI
+    30ea: RTS
+    30eb: LDA #08
+    30ed: STA $22
+    30ef: LDA #c0
+    30f1: STA $21
+    30f3: JSR $3120
+    30f6: DEC $21
+    30f8: BNE *-7   -> 0x30f3
+    30fa: DEC $22
+    30fc: BNE *-15   -> 0x30ef
+    30fe: RTS
+    30ff: LDY #08
+    3101: JSR $3108
+    3104: DEY
+    3105: BNE *-6   -> 0x3101
+    3107: RTS
+    3108: LDA #60
+    310a: STA $21
+    310c: JSR $3117
+    310f: LDA #40
+    3111: STA $21
+    3113: JSR $3117
+    3116: RTS
+    3117: LDX #20
+    3119: JSR $3120
+    311c: DEX
+    311d: BNE *-6   -> 0x3119
+    311f: RTS
+    3120: LDA $21
+    3122: STA $23
+    3124: LDA #80
+    3126: JSR $2be9  audio_off()
+    3129: DEC $23
+    312b: BNE *-4   -> 0x3129
+    312d: LDA #01
+    312f: JSR $2bee  audio_on()
+    3132: LDA $21
+    3134: STA $23
+    3136: DEC $23
+    3138: BNE *-4   -> 0x3136
+    313a: RTS
+    313b: NOP
+    313c: 0x23  #
+    313d: 0x01
+    313e: 0x01
+    313f: 0x01
+    3140: 0x01
+    3141: 0x01
+    3142: 0x01
+    3143: 0x01
+    3144: 0x01
+    3145: 0x01
+    3146: 0x01
+    3147: 0x01
+    3148: 0x01
+    3149: 0x01
+    314a: 0x01
+    314b: 0x01
+
+    314c: 0x00
+    314d: 0x20   
+    314e: 0x63  c
+    314f: 0x20   
+    3150: 0x63  c
+    3151: 0x20   
+    3152: 0x00
+    3153: 0x20   
+    3154: 0x63  c
+    3155: 0x20   
+    3156: 0x63  c
+    3157: 0x20   
+    3158: 0x00
+    3159: 0x20   
+    315a: 0x63  c
+    315b: 0x20   
+    315c: 0x00
+    315d: 0x63  c
+    315e: 0x20   
+    315f: 0x20   
+    3160: 0x20   
+    3161: 0x20   
+    3162: 0x00
+    3163: 0x20   
+    3164: 0x20   
+    3165: 0x20   
+    3166: 0x20   
+    3167: 0x20   
+    3168: 0x00
+    3169: 0x20   
+    316a: 0x20   
+    316b: 0x20   
+    316c: 0x00
+    316d: 0x20   
+    316e: 0x20   
+    316f: 0x23  #
+    3170: 0x01
+    3171: 0x01
+    3172: 0x01
+    3173: 0x01
+    3174: 0x01
+    3175: 0x01
+    3176: 0x01
+    3177: 0x01
+    3178: 0x01
+    3179: 0x01
+    317a: 0x01
+    317b: 0x01
+    317c: 0x00
+    317d: 0x63  c
+    317e: 0x20   
+    317f: 0x00
+    3180: 0x20   
+    3181: 0x64  d
+    3182: 0x20   
+    3183: 0x64  d
+    3184: 0x20   
+    3185: 0x00
+    3186: 0x20   
+    3187: 0x64  d
+    3188: 0x20   
+    3189: 0x64  d
+    318a: 0x20   
+    318b: 0x00
+    318c: 0x00
+    318d: 0x20   
+    318e: 0x20   
+    318f: 0x00
+    3190: 0x64  d
+    3191: 0x20   
+    3192: 0x20   
+    3193: 0x20   
+    3194: 0x20   
+    3195: 0x00
+    3196: 0x20   
+    3197: 0x20   
+    3198: 0x20   
+    3199: 0x20   
+    319a: 0x20   
+    319b: 0x00
+    319c: 0x00
+    319d: 0x01
+    319e: 0x01
+    319f: 0x00
+    31a0: 0x20   
+    31a1: 0x20   
+    31a2: 0x23  #
+    31a3: 0x01
+    31a4: 0x01
+    31a5: 0x01
+    31a6: 0x01
+    31a7: 0x01
+    31a8: 0x01
+    31a9: 0x01
+    31aa: 0x01
+    31ab: 0x01
+    31ac: 0x00
+    31ad: 0x20   
+    31ae: 0x20   
+    31af: 0x00
+    31b0: 0x64  d
+    31b1: 0x20   
+    31b2: 0x00
+    31b3: 0x20   
+    31b4: 0x65  e
+    31b5: 0x20   
+    31b6: 0x65  e
+    31b7: 0x20   
+    31b8: 0x00
+    31b9: 0x20   
+    31ba: 0x65  e
+    31bb: 0x20   
+    31bc: 0x00
+    31bd: 0x63  c
+    31be: 0x20   
+    31bf: 0x00
+    31c0: 0x20   
+    31c1: 0x20   
+    31c2: 0x00
+    31c3: 0x65  e
+    31c4: 0x20   
+    31c5: 0x20   
+    31c6: 0x20   
+    31c7: 0x20   
+    31c8: 0x00
+    31c9: 0x20   
+    31ca: 0x20   
+    31cb: 0x20   
+    31cc: 0x00
+    31cd: 0x20   
+    31ce: 0x20   
+    31cf: 0x00
+    31d0: 0x01
+    31d1: 0x01
+    31d2: 0x00
+    31d3: 0x20   
+    31d4: 0x20   
+    31d5: 0x23  #
+    31d6: 0x01
+    31d7: 0x01
+    31d8: 0x01
+    31d9: 0x01
+    31da: 0x01
+    31db: 0x01
+    31dc: 0x00
+    31dd: 0x63  c
+    31de: 0x20   
+    31df: 0x00
+    31e0: 0x20   
+    31e1: 0x20   
+    31e2: 0x00
+    31e3: 0x65  e
+    31e4: 0x20   
+    31e5: 0x00
+    31e6: 0x20   
+    31e7: 0x66  f
+    31e8: 0x20   
+    31e9: 0x66  f
+    31ea: 0x20   
+    31eb: 0x00
+    31ec: 0x00
+    31ed: 0x20   
+    31ee: 0x20   
+    31ef: 0x00
+    31f0: 0x64  d
+    31f1: 0x20   
+    31f2: 0x00
+    31f3: 0x20   
+    31f4: 0x20   
+    31f5: 0x00
+    31f6: 0x66  f
+    31f7: 0x20   
+    31f8: 0x20   
+    31f9: 0x20   
+    31fa: 0x20   
+    31fb: 0x00
+    31fc: 0x00
+    31fd: 0x01
+    31fe: 0x01
+    31ff: 0x00
+    3200: 0x20   
+    3201: 0x20   
+    3202: 0x00
+    3203: 0x01
+    3204: 0x01
+    3205: 0x00
+    3206: 0x20   
+    3207: 0x20   
+    3208: 0x23  #
+    3209: 0x01
+    320a: 0x01
+    320b: 0x01
+    320c: 0x00
+    320d: 0x20   
+    320e: 0x20   
+    320f: 0x00
+    3210: 0x64  d
+    3211: 0x20   
+    3212: 0x00
+    3213: 0x20   
+    3214: 0x20   
+    3215: 0x00
+    3216: 0x66  f
+    3217: 0x20   
+    3218: 0x00
+    3219: 0x20   
+    321a: 0x67  g
+    321b: 0x20   
+    321c: 0x00
+    321d: 0x63  c
+    321e: 0x20   
+    321f: 0x00
+    3220: 0x20   
+    3221: 0x20   
+    3222: 0x00
+    3223: 0x65  e
+    3224: 0x20   
+    3225: 0x00
+    3226: 0x20   
+    3227: 0x20   
+    3228: 0x00
+    3229: 0x67  g
+    322a: 0x20   
+    322b: 0x20   
+    322c: 0x00
+    322d: 0x20   
+    322e: 0x20   
+    322f: 0x00
+    3230: 0x01
+    3231: 0x01
+    3232: 0x00
+    3233: 0x20   
+    3234: 0x20   
+    3235: 0x00
+    3236: 0x01
+    3237: 0x01
+    3238: 0x00
+    3239: 0x20   
+    323a: 0x20   
+    323b: 0x20   
+
+    323c: 0x3c  <
+    323d: 0x31  1
+
+draw_tracks()
+    323e: JSR $2a16  set_videopage_0()
+    3241: TAY
+    3242: LDA #20
+    3244: STA $00
+    3246: LDA #10
+    3248: STA $03
+    324a: LDA #10
+    324c: STA $05
+    324e: LDA $323c, Y
+    3251: STA $25
+    3253: LDA $323d, Y
+    3256: STA $26
+    3258: LDX #10
+    325a: LDA ($25), Y
+    325c: STA ($00), Y
+    325e: JSR $3323
+    3261: JSR $330e  inc_xpos()
+    3264: DEX
+    3265: BNE *-13   -> 0x325a
+    3267: JSR $3316  xpos_plus_$3()
+    326a: DEC $05
+    326c: BNE *-22   -> 0x3258
+    326e: LDA #30
+    3270: STA $03
+    3272: LDA #0f
+    3274: STA $00
+    3276: LDA #10
+    3278: STA $05
+    327a: JSR $3330
+    327d: LDX #10
+    327f: LDA ($25), Y
+    3281: CMP #23
+    3283: BNE *3   -> 0x3288
+    3285: NOP
+    3286: LDA #3d
+    3288: STA ($00), Y
+    328a: JSR $333d  dec_xpos()
+    328d: JSR $3330
+    3290: DEX
+    3291: BNE *-20   -> 0x327f
+    3293: JSR $3316  xpos_plus_$3()
+    3296: DEC $05
+    3298: BNE *-29   -> 0x327d
+    329a: JSR $3323
+    329d: JSR $2a16  set_videopage_0()
+    32a0: LDA #3e
+    32a2: STA $00
+    32a4: LDA #30
+    32a6: STA $03
+    32a8: LDA #10
+    32aa: STA $05
+    32ac: LDX #10
+    32ae: LDA ($25), Y
+    32b0: CMP #23
+    32b2: BNE *3   -> 0x32b7
+    32b4: NOP
+    32b5: LDA #0c
+    32b7: STA ($00), Y
+    32b9: JSR $333d  dec_xpos()
+    32bc: JSR $3323
+    32bf: DEX
+    32c0: BNE *-20   -> 0x32ae
+    32c2: JSR $3316  xpos_plus_$3()
+    32c5: DEC $05
+    32c7: BNE *-29   -> 0x32ac
+    32c9: JSR $2a20  set_videopage_2()
+    32cc: LDA #0f
+    32ce: STA $00
+    32d0: JSR $3330
+    32d3: LDA #10
+    32d5: STA $05
+    32d7: LDA #10
+    32d9: STA $03
+    32db: LDX #10
+    32dd: LDA ($25), Y
+    32df: CMP #23
+    32e1: BNE *3   -> 0x32e6
+    32e3: NOP
+    32e4: LDA #1f
+    32e6: STA ($00), Y
+    32e8: JSR $330e  inc_xpos()
+    32eb: JSR $3330
+    32ee: DEX
+    32ef: BNE *-20   -> 0x32dd
+    32f1: JSR $3316  xpos_plus_$3()
+    32f4: DEC $05
+    32f6: BNE *-29   -> 0x32db
+    32f8: JSR $2a25  set_videopage_3()
+    32fb: LDY #d1
+    32fd: LDX #04
+    32ff: LDA $3309, X
+    3302: STA ($00), Y
+    3304: DEY
+    3305: DEX
+    3306: BPL *-9   -> 0x32ff
+    3308: RTS
+    3309: 0x53  S
+    330a: 0x54  T
+    330b: 0x41  A
+    330c: 0x52  R
+    330d: 0x54  T
+
+inc_xpos()
+    330e: CLC
+    330f: LDA $00
+    3311: ADC #01
+    3313: JMP $331b
+
+xpos_plus_$3()
+    3316: CLC
+    3317: LDA $00
+    3319: ADC $03
+    331b: STA $00
+    331d: BCC *3   -> 0x3322
+    331f: NOP
+    3320: INC $01
+    3322: RTS
+    3323: CLC
+    3324: LDA $25
+    3326: ADC #01
+    3328: STA $25
+    332a: BCC *3   -> 0x332f
+    332c: NOP
+    332d: INC $26
+    332f: RTS
+    3330: SEC
+    3331: LDA $25
+    3333: SBC #01
+    3335: STA $25
+    3337: BCS *3   -> 0x333c
+    3339: NOP
+    333a: DEC $26
+    333c: RTS
+
+dec_xpos()
+    333d: SEC
+    333e: LDA $00
+    3340: SBC #01
+    3342: STA $00
+    3344: BCS *3   -> 0x3349
+    3346: NOP
+    3347: DEC $01
+    3349: RTS
+    334a: LDA #00
+    334c: STA $45
+    334e: STA $46
+    3350: STA $52
+    3352: STA $7e
+    3354: LDA #03
+    3356: STA $51
+    3358: LDA #43
+    335a: STA $31
+    335c: LDA #ef
+    335e: STA $30
+    3360: RTS
+    3361: LDA $45
+    3363: STA $03
+    3365: DEC $51
+    3367: BPL *4   -> 0x336d
+    3369: NOP
+    336a: JMP $3431
+    336d: LDA $51
+    336f: CMP #02
+    3371: BNE *15   -> 0x3382
+    3373: NOP
+    3374: LDA $03
+    3376: CMP #00
+    3378: BNE *8   -> 0x3382
+    337a: NOP
+    337b: JSR $36b2
+    337e: LDA #00
+    3380: STA $03
+    3382: JSR $3391
+    3385: LDX $03
+    3387: LDA $52, X
+    3389: BMI *97   -> 0x33ec
+    338b: NOP
+    338c: DEC $03
+    338e: BPL *-35   -> 0x336d
+    3390: RTS
+    3391: JSR $3725
+    3394: LDX $03
+    3396: LDA $46, X
+    3398: AND #03
+    339a: ASL A
+    339b: TAY
+    339c: LDA $3998, Y
+    339f: STA $00
+    33a1: INY
+    33a2: LDA $3998, Y
+    33a5: STA $01
+    33a7: LDY $46, X
+    33a9: LDA $398f, Y
+    33ac: LDX $51
+    33ae: CLC
+    33af: ADC $3993, X
+    33b2: TAX
+    33b3: LDY #00
+    33b5: LDA $03
+    33b7: CMP $45
+    33b9: BEQ *25   -> 0x33d4
+    33bb: NOP
+    33bc: LDA $3927, X
+    33bf: STA ($25), Y
+    33c1: INX
+    33c2: JSR $3707
+    33c5: LDA $3927, X
+    33c8: STA ($25), Y
+    33ca: INX
+    33cb: JSR $3707
+    33ce: LDA $3927, X
+    33d1: STA ($25), Y
+    33d3: RTS
+    33d4: LDA $38eb, X
+    33d7: STA ($25), Y
+    33d9: INX
+    33da: JSR $3707
+    33dd: LDA $38eb, X
+    33e0: STA ($25), Y
+    33e2: INX
+    33e3: JSR $3707
+    33e6: LDA $38eb, X
+    33e9: STA ($25), Y
+    33eb: RTS
+    33ec: LDA $51
+    33ee: ASL A
+    33ef: ASL A
+    33f0: ASL A
+    33f1: STA $5d
+    33f3: LDA $52, X
+    33f5: AND #03
+    33f7: TAY
+    33f8: LDA $46, X
+    33fa: CMP $3963, Y
+    33fd: BNE *42   -> 0x3429
+    33ff: NOP
+    3400: TYA
+    3401: ASL A
+    3402: CLC
+    3403: ADC $5d
+    3405: TAY
+    3406: LDA $3967, Y
+    3409: STA $5d
+    340b: JSR $3725
+    340e: LDA $46, X
+    3410: ASL A
+    3411: TAX
+    3412: LDA $3987, X
+    3415: STA $00
+    3417: INX
+    3418: LDA $3987, X
+    341b: STA $01
+    341d: JSR $3707
+    3420: LDA $5d
+    3422: LDY #00
+    3424: STA ($25), Y
+    3426: JMP $338c
+    3429: CLC
+    342a: TYA
+    342b: ASL A
+    342c: ADC #01
+    342e: JMP $3402
+    3431: LDA #04
+    3433: STA $51
+    3435: LDX $03
+    3437: LDA $52, X
+    3439: BPL *4   -> 0x343f
+    343b: NOP
+    343c: JSR $3555
+    343f: LDX $03
+    3441: BNE *4   -> 0x3447
+    3443: NOP
+    3444: JSR $3598
+    3447: JSR $3725
+    344a: LDX $03
+    344c: LDA $46, X
+    344e: ASL A
+    344f: TAY
+    3450: LDA $39a0, Y
+    3453: STA $00
+    3455: INY
+    3456: LDA $39a0, Y
+    3459: STA $01
+    345b: JSR $3707
+    345e: DEY
+    345f: STY $05
+    3461: LDY #00
+    3463: LDX #00
+    3465: LDA ($25), Y
+    3467: CMP #1f
+    3469: BNE *4   -> 0x346f
+    346b: NOP
+    346c: JMP $350c
+    346f: CMP #0c
+    3471: BNE *4   -> 0x3477
+    3473: NOP
+    3474: JMP $350b
+    3477: CMP #23
+    3479: BNE *4   -> 0x347f
+    347b: NOP
+    347c: JMP $350a
+    347f: CMP #3d
+    3481: BNE *4   -> 0x3487
+    3483: NOP
+    3484: JMP $350d
+    3487: LDY $03
+    3489: BNE *62   -> 0x34c9
+    348b: NOP
+    348c: PHA
+    348d: LDY $03
+    348f: LDA $0046, Y
+    3492: TAY
+    3493: PLA
+    3494: CMP $39dc, Y
+    3497: BEQ *48   -> 0x34c9
+    3499: NOP
+    349a: CMP #01
+    349c: JMP $3a90
+    349f: LDA $25
+    34a1: AND #10
+    34a3: BEQ *7   -> 0x34ac
+    34a5: NOP
+    34a6: LDA $39e4, Y
+    34a9: JMP $34c2
+    34ac: LDA $39e0, Y
+    34af: JMP $34c2
+    34b2: LDA $26
+    34b4: CMP #42
+    34b6: BCS *7   -> 0x34bf
+    34b8: NOP
+    34b9: LDA $39e0, Y
+    34bc: JMP $34c2
+    34bf: LDA $39e4, Y
+    34c2: LDY #00
+    34c4: STA ($25), Y
+    34c6: JMP $343f
+    34c9: JSR $3540
+    34cc: JSR $34da
+    34cf: DEC $03
+    34d1: BPL *4   -> 0x34d7
+    34d3: NOP
+    34d4: JMP $3361
+    34d7: JMP $3435
+    34da: LDA $39c8, Y
+    34dd: STA $00
+    34df: INY
+    34e0: LDA $39c8, Y
+    34e3: STA $01
+    34e5: JSR $3725
+    34e8: JSR $3707
+    34eb: LSR $05
+    34ed: LDX $05
+    34ef: LDA $39d0, X
+    34f2: LDY #00
+    34f4: STA ($25), Y
+    34f6: LDX $03
+    34f8: LDA $52, X
+    34fa: AND #40
+    34fc: BEQ *11   -> 0x3509
+    34fe: NOP
+    34ff: LDA $52, X
+    3501: AND #bf
+    3503: STA $52, X
+    3505: LDA $5e, X
+    3507: STA ($25), Y
+    3509: RTS
+    350a: INX
+    350b: INX
+    350c: INX
+    350d: PHA
+    350e: TXA
+    350f: PHA
+    3510: LDY $03
+    3512: LDA $0046, Y
+    3515: TAY
+    3516: PLA
+    3517: CMP $39d4, Y
+    351a: BEQ *11   -> 0x3527
+    351c: NOP
+    351d: CMP $39d8, Y
+    3520: BEQ *5   -> 0x3527
+    3522: NOP
+    3523: PLA
+    3524: JMP $34c9
+    3527: PHA
+    3528: JSR $3540
+    352b: JSR $34da
+    352e: PLA
+    352f: TAX
+    3530: PLA
+    3531: LDY $03
+    3533: STA $005e, Y
+    3536: TXA
+    3537: ORA #80
+    3539: LDX $03
+    353b: STA $52, X
+    353d: JMP $34cf
+    3540: JSR $3725
+    3543: LDY $05
+    3545: LDA $39a8, Y
+    3548: STA $00
+    354a: INY
+    354b: LDA $39a8, Y
+    354e: STA $01
+    3550: DEY
+    3551: JSR $3715
+    3554: RTS
+    3555: JSR $3391
+    3558: LDX $03
+    355a: LDA $46, X
+    355c: TAY
+    355d: LDA $52, X
+    355f: AND #03
+    3561: CMP $39c0, Y
+    3564: BEQ *39   -> 0x358d
+    3566: NOP
+    3567: LDA $39c4, Y
+    356a: STA $46, X
+    356c: TYA
+    356d: ASL A
+    356e: TAY
+    356f: INY
+    3570: TYA
+    3571: ASL A
+    3572: TAY
+    3573: LDA $39b0, Y
+    3576: STA $00
+    3578: INY
+    3579: LDA $39b0, Y
+    357c: STA $01
+    357e: LDA $52, X
+    3580: AND #03
+    3582: ORA #40
+    3584: STA $52, X
+    3586: JSR $3725
+    3589: JSR $3715
+    358c: RTS
+    358d: LDA $39c0, Y
+    3590: STA $46, X
+    3592: TYA
+    3593: ASL A
+    3594: TAY
+    3595: JMP $3570
+    3598: BIT $02
+    359a: BMI *2   -> 0x359e
+    359c: NOP
+    359d: RTS
+    359e: LDX #00
+    35a0: JSR $3725
+    35a3: LDA $5101  input_0
+    35a6: EOR #ff
+    35a8: PHA
+    35a9: AND #08
+    35ab: BNE *25   -> 0x35c6
+    35ad: NOP
+    35ae: PLA
+    35af: PHA
+    35b0: AND #04
+    35b2: BNE *20   -> 0x35c8
+    35b4: NOP
+    35b5: PLA
+    35b6: PHA
+    35b7: AND #20
+    35b9: BNE *12   -> 0x35c7
+    35bb: NOP
+    35bc: PLA
+    35bd: PHA
+    35be: AND #40
+    35c0: BNE *3   -> 0x35c5
+    35c2: NOP
+    35c3: PLA
+    35c4: RTS
+    35c5: INX
+    35c6: INX
+    35c7: INX
+    35c8: PLA
+    35c9: JSR $3725
+    35cc: STX $05
+    35ce: LDA $46
+    35d0: CMP $05
+    35d2: BNE *50   -> 0x3606
+    35d4: NOP
+    35d5: ASL $05
+    35d7: LDX $05
+    35d9: LDA $39e8, X
+    35dc: STA $00
+    35de: INX
+    35df: LDA $39e8, X
+    35e2: STA $01
+    35e4: JSR $3707
+    35e7: LDY #00
+    35e9: LDA ($25), Y
+    35eb: STA $05
+    35ed: DEX
+    35ee: AND #fe
+    35f0: BNE *19   -> 0x3605
+    35f2: NOP
+    35f3: LDA $39f0, X
+    35f6: STA $00
+    35f8: INX
+    35f9: LDA $39f0, X
+    35fc: STA $01
+    35fe: JSR $3707
+    3601: LDA $05
+    3603: STA ($25), Y
+    3605: RTS
+    3606: TAY
+    3607: LDA $39c0, Y
+    360a: CMP $05
+    360c: BEQ *10   -> 0x3618
+    360e: NOP
+    360f: LDA $39c4, Y
+    3612: CMP $05
+    3614: BEQ *67   -> 0x3659
+    3616: NOP
+    3617: RTS
+    3618: STY $05
+    361a: ASL $05
+    361c: LDX $05
+    361e: CLC
+    361f: LDA $39f8, X
+    3622: ADC $25
+    3624: STA $25
+    3626: INX
+    3627: LDA $39f8, X
+    362a: ADC $26
+    362c: STA $26
+    362e: LDY #00
+    3630: LDA ($25), Y
+    3632: AND #fe
+    3634: BEQ *8   -> 0x363e
+    3636: NOP
+    3637: JSR $369a
+    363a: BEQ *2   -> 0x363e
+    363c: NOP
+    363d: RTS
+    363e: DEX
+    363f: CLC
+    3640: LDA $3a00, X
+    3643: ADC $25
+    3645: STA $25
+    3647: INX
+    3648: LDA $3a00, X
+    364b: ADC $26
+    364d: STA $26
+    364f: LSR $05
+    3651: LDX $05
+    3653: LDA $3a08, X
+    3656: STA ($25), Y
+    3658: RTS
+    3659: STY $05
+    365b: ASL $05
+    365d: LDX $05
+    365f: CLC
+    3660: LDA $3a0c, X
+    3663: ADC $25
+    3665: STA $25
+    3667: INX
+    3668: LDA $3a0c, X
+    366b: ADC $26
+    366d: STA $26
+    366f: LDY #00
+    3671: LDA ($25), Y
+    3673: AND #fe
+    3675: BEQ *8   -> 0x367f
+    3677: NOP
+    3678: JSR $369a
+    367b: BEQ *2   -> 0x367f
+    367d: NOP
+    367e: RTS
+    367f: DEX
+    3680: CLC
+    3681: LDA $3a14, X
+    3684: ADC $25
+    3686: STA $25
+    3688: INX
+    3689: LDA $3a14, X
+    368c: ADC $26
+    368e: STA $26
+    3690: LSR $05
+    3692: LDX $05
+    3694: LDA $3a1c, X
+    3697: STA ($25), Y
+    3699: RTS
+    369a: DEX
+    369b: CLC
+    369c: LDA $3a20, X
+    369f: ADC $25
+    36a1: STA $25
+    36a3: INX
+    36a4: LDA $3a20, X
+    36a7: ADC $26
+    36a9: STA $26
+    36ab: LDY #00
+    36ad: LDA ($25), Y
+    36af: AND #fe
+    36b1: RTS
+    36b2: JSR $3725
+    36b5: LDA $46
+    36b7: ASL A
+    36b8: TAX
+    36b9: CLC
+    36ba: LDA $3a32, X
+    36bd: ADC $25
+    36bf: STA $25
+    36c1: INX
+    36c2: LDA $3a32, X
+    36c5: ADC $26
+    36c7: STA $26
+    36c9: TXA
+    36ca: PHA
+    36cb: JSR $36e5
+    36ce: PLA
+    36cf: TAX
+    36d0: DEX
+    36d1: CLC
+    36d2: LDA $3a3a, X
+    36d5: ADC $25
+    36d7: STA $25
+    36d9: INX
+    36da: LDA $3a3a, X
+    36dd: ADC $26
+    36df: STA $26
+    36e1: JSR $36e5
+    36e4: RTS
+
+pickup_passenger_maybe():
+    36e5: LDY #00
+    36e7: LDA ($25), Y
+    36e9: SEC
+    36ea: SBC #63
+    36ec: BCC *24   -> 0x3706       return
+    36ee: NOP
+    36ef: TAX                       ; passenger code 0-4
+    36f0: SBC #05
+    36f2: BCS *18   -> 0x3706       return
+    36f4: NOP
+    36f5: LDA #20
+    36f7: STA ($25), Y              ($25) = 0x20 ; remove the passenger
+    36f9: LDA $3a28, X              $17 = [1,2,3,4,5][passenger_code]
+    36fc: STA $17
+    36fe: LDA $3a2d, X
+    3701: STA $18                   $17 = [0,0,0,0,0][passenger_code]
+    3703: JSR $2fef
+    3706: RTS
+
+    3707: CLC
+    3708: LDA $25
+    370a: ADC $00
+    370c: STA $25
+    370e: LDA $01
+    3710: ADC $26
+    3712: STA $26
+    3714: RTS
+    3715: JSR $3707
+    3718: LDA $03
+    371a: ASL A
+    371b: TAX
+    371c: LDA $25
+    371e: STA $30, X
+    3720: LDA $26
+    3722: STA $31, X
+    3724: RTS
+    3725: LDA $03
+    3727: ASL A
+    3728: TAY
+    3729: LDA $0030, Y
+    372c: STA $25
+    372e: LDA $0031, Y
+    3731: STA $26
+    3733: RTS
+
+    3734: LDA #76
+    3736: STA $07           ; $07 = 0x76
+    3738: LDA #8c
+    373a: STA $08           ; $08 = 0x8c
+    373c: LDA #b0
+    373e: STA $69           ; $69 = 0xb0
+    3740: LDA #41
+    3742: STA $6a           ; $6a = 0x41
+    3744: LDA #00
+    3746: STA $6c           ; $6c = 0x00
+    3748: LDA #f0
+    374a: STA $5100  sprite_no = 0xF0
+    374d: LDA #07
+    374f: STA $6b           ; $6b = 0x07
+    3751: LDA #10
+    3753: STA $6f           ; $6f = 0x10
+    3755: LDA #0d
+    3757: STA $70           ; $70 = 0x0d
+    3759: RTS
+
+    375a: DEC $6b
+    375c: BMI *38   -> 0x3784
+    375e: NOP
+    375f: LDY #00
+    3761: LDA ($69), Y
+    3763: LDY #05
+    3765: CMP $3a5a, Y
+    3768: BEQ *7   -> 0x3771
+    376a: NOP
+    376b: DEY
+    376c: BPL *-9   -> 0x3765
+    376e: JMP $2c3c
+    3771: LDX $6c
+    3773: CLC
+    3774: LDA $07
+    3776: ADC $3a42, X  ; [-1, 0, 1, 0]
+    3779: STA $07       ; $07 += $3a42[$6c]
+    377b: LDA $08
+    377d: CLC
+    377e: ADC $3a46, X  ; [0, 1, 0, -1]
+    3781: STA $08       ; $08 += $3a46[$6c]
+    3783: RTS
+    3784: LDA #08
+    3786: STA $6b
+    3788: JSR $379b
+    378b: JSR $37dc
+    378e: JSR $3839
+    3791: LDA $8e
+    3793: BPL *2   -> 0x3797
+    3795: NOP
+    3796: RTS
+    3797: JSR $37b6
+    379a: RTS
+
+    379b: LDA $31
+    379d: ASL A
+    379e: ASL A
+    379f: ASL A
+    37a0: AND #18
+    37a2: STA $03       ; $03 = ($31 << 3) & 0x18
+    37a4: LDA $30
+    37a6: LSR A
+    37a7: LSR A
+    37a8: LSR A
+    37a9: LSR A
+    37aa: LSR A
+    37ab: ORA $03
+    37ad: STA $6d       ; $6d = ($30 >> 5)| $03
+    37af: LDA $30
+    37b1: AND #1f
+    37b3: STA $6e       ; $6e = $30 & 0x1f
+    37b5: RTS
+
+; $69.w = player screen address
+; $6f = player xpos
+; $70 = player ypos
+move_player()
+    37b6: LDX $6c
+    37b8: CLC
+    37b9: LDA $6f
+    37bb: ADC $3a52, X
+    37be: STA $6f               ; $6f += [1, 0, -1, 0][$6c]
+    37c0: CLC
+    37c1: LDA $70
+    37c3: ADC $3a56, X
+    37c6: STA $70               ; $70 += [0, -1, 0, 1][$6c]
+    37c8: TXA
+    37c9: ASL A
+    37ca: TAX                   ; X = $6c * 2
+    37cb: CLC                   ; 3a4a = [1, 0, e0, ff, ff, ff, 20, 00]
+    37cc: LDA $69
+    37ce: ADC $3a4a, X
+    37d1: STA $69               ; $69 += [1, -32, -1, 32][$6c]
+    37d3: INX
+    37d4: LDA $6a
+    37d6: ADC $3a4a, X          ; $6A += [0, -1, -1, 0][$6c] + C
+    37d9: STA $6a
+    37db: RTS
+
+    37dc: SEC
+    37dd: LDA $6f
+    37df: SBC $6e               $6f - $6e
+    37e1: BCS *14   -> 0x37f1
+    37e3: NOP
+    37e4: EOR #ff
+    37e6: ADC #01
+    37e8: STA $73       ; $73 = |$6f - $6e|
+    37ea: LDA #00
+    37ec: STA $71       ; $71 = 0
+    37ee: JMP $37fe
+
+    37f1: STA $73
+    37f3: LDA #02
+    37f5: STA $71       ; $71 = 2
+    37f7: JMP $37fe
+
+    37fa: STA $73
+    37fc: STA $71
+
+    37fe: SEC
+    37ff: LDA $70
+    3801: SBC $6d
+    3803: BCS *14   -> 0x3813
+    3805: NOP
+    3806: EOR #ff
+    3808: ADC #01
+    380a: STA $74
+    380c: LDA #03
+    380e: STA $72
+    3810: JMP $3820
+    3813: STA $74
+    3815: LDA #01
+    3817: STA $72
+    3819: JMP $3820
+    381c: STA $74
+    381e: STA $72
+
+    3820: LDA $73
+    3822: CMP $74
+    3824: BCS *10   -> 0x3830
+    3826: NOP
+    3827: LDA $72
+    3829: STA $75           ; $75 = $72
+    382b: LDA $71
+    382d: STA $76           ; $76 = $71
+    382f: RTS
+    3830: LDA $71
+    3832: STA $75           ; $75 = $71
+    3834: LDA $72
+    3836: STA $76           ; $76 = $72
+    3838: RTS
+
+    3839: LDY #00
+    383b: LDA ($69), Y              ; A = $69
+    383d: LDY #05
+
+    383f: CMP $3a5a, Y              ; Check 3a5f -> 3a5a for value of $69
+    3842: BEQ *7   -> 0x384b
+    3844: NOP
+    3845: DEY
+    3846: BPL *-9   -> 0x383f
+    
+    3848: JMP $2c3c
+
+    384b: LDX $6c                   ; X = $6c
+    384d: LDA $75                   ; A = $75
+    384f: CMP $3a60, X              ; $3a60 = [2,3,0,1]
+    3852: BNE *81   -> 0x38a5
+    3854: NOP                       ; here if $(3a60 + $6c) == $75
+                                    ; [2,3,0,1][$6c] == $75
+    3855: LDA $76
+    3857: CMP $3a60, X
+    385a: BNE *86   -> 0x38b2
+    385c: NOP                       ; here if [2,3,0,1][$6c] == $76
+L1:
+    385d: LDY #00
+    385f: LDA ($69), Y              ; A = $69
+    3861: PHA
+    3862: AND #fe
+    3864: BNE *22   -> 0x387c
+    3866: NOP                       ; here if $69 & 0xFE == 0, so if 0 or 1
+    3867: LDA ($69), Y
+    3869: LDX $6c
+    386b: CMP $39dc, X              ; [1,0,1,0][$6c] == $69
+    386e: BNE *3   -> 0x3873
+    3870: NOP
+    3871: PLA
+    3872: RTS
+
+    3873: LDA $3a8c, X
+    3876: STA ($69), Y              ; $69 = [1f, 0c, 23, 3d][$6c] = Corner char
+    3878: PLA
+    3879: JMP $385d     ; L1
+
+    387c: PLA                       ; here if $69 is > 1
+    387d: ASL $6c
+    387f: LDX $6c                   ; X = $6c * 2
+    3881: LSR $6c
+    3883: CMP $3a64, X              ; [1f, 0c, 0c, 23, 23, 3d, 1f, 3d][$6c*2] == $69
+
+    3886: BEQ *18   -> 0x389a
+    3888: NOP
+    3889: INX
+    388a: CMP $3a64, X
+    388d: BEQ *11   -> 0x389a       ;  [1f, 0c, 0c, 23, 23, 3d, 1f, 3d][$6c*2+1] == $69
+    388f: NOP
+    3890: LDX $6c
+    3892: LDA $39dc, X
+    3895: LDY #00
+    3897: STA ($69), Y              ; ($69) = [1,0,1,0][$6C]
+    3899: RTS
+
+    389a: LDA $3a6c, X              ; [1, 3, 2, 0, 3, 1, 2, 0]
+    389d: STA $6c                   ; $6c = [1,3,2,0,3,1,2,0][X]
+    389f: ORA #f0
+    38a1: STA $5100  sprite_no      ; sprite_no = $6c & 0xF0
+    38a4: RTS
+
+; [2,3,0,1][$6c] != $75
+    38a5: JSR $38c1
+    38a8: BNE *-77   -> 0x385d
+    38aa: LDA $75
+    38ac: JSR $38de
+    38af: JMP $385d
+
+    38b2: LDA $76
+    38b4: JSR $38c1
+    38b7: BNE *-92   -> 0x385d
+    38b9: LDA $76
+    38bb: JSR $38de
+    38be: JMP $385d
+
+    38c1: PHA
+    38c2: ASL A
+    38c3: TAX
+    38c4: CLC
+    38c5: LDA $69
+    38c7: ADC $3a74, X
+    38ca: STA $25
+    38cc: INX
+    38cd: LDA $6a
+    38cf: ADC $3a74, X
+    38d2: STA $26
+    38d4: PLA
+    38d5: TAX
+    38d6: LDY #00
+    38d8: LDA ($25), Y
+    38da: CMP $39dc, X
+    38dd: RTS
+    38de: ASL A
+    38df: ASL A
+    38e0: ORA $6c
+    38e2: TAX
+    38e3: LDA $3a7c, X
+    38e6: LDY #00
+    38e8: STA ($69), Y
+    38ea: RTS
+    
+    38eb: 0x0f
+    38ec: 0x13
+    38ed: 0x17
+    38ee: 0x10
+    38ef: 0x14
+    38f0: 0x18
+    38f1: 0x11
+    38f2: 0x15
+    38f3: 0x76  v
+    38f4: 0x12
+    38f5: 0x16
+    38f6: 0x70  p
+    38f7: 0x01
+    38f8: 0x01
+    38f9: 0x01
+    38fa: 0x03
+    38fb: 0x07
+    38fc: 0x0b
+    38fd: 0x02
+    38fe: 0x06
+    38ff: 0x0a
+    3900: 0x19
+    3901: 0x05
+    3902: 0x09
+    3903: 0x6f  o
+    3904: 0x04
+    3905: 0x08
+    3906: 0x00
+    3907: 0x00
+    3908: 0x00
+    3909: 0x10
+    390a: 0x14
+    390b: 0x18
+    390c: 0x0f
+    390d: 0x13
+    390e: 0x17
+    390f: 0x1a
+    3910: 0x12
+    3911: 0x16
+    3912: 0x70  p
+    3913: 0x11
+    3914: 0x15
+    3915: 0x01
+    3916: 0x01
+    3917: 0x01
+    3918: 0x02
+    3919: 0x06
+    391a: 0x0a
+    391b: 0x03
+    391c: 0x07
+    391d: 0x0b
+    391e: 0x04
+    391f: 0x08
+    3920: 0x77  w
+    3921: 0x05
+    3922: 0x09
+    3923: 0x6f  o
+    3924: 0x00
+    3925: 0x00
+    3926: 0x00
+    3927: 0x5c  \
+    3928: 0x13
+    3929: 0x17
+    392a: 0x5d  ]
+    392b: 0x14
+    392c: 0x18
+    392d: 0x27  '
+    392e: 0x15
+    392f: 0x76  v
+    3930: 0x12
+    3931: 0x16
+    3932: 0x70  p
+    3933: 0x01
+    3934: 0x01
+    3935: 0x01
+    3936: 0x03
+    3937: 0x07
+    3938: 0x61  a
+    3939: 0x02
+    393a: 0x06
+    393b: 0x62  b
+    393c: 0x19
+    393d: 0x05
+    393e: 0x2d  -
+    393f: 0x6f  o
+    3940: 0x04
+    3941: 0x08
+    3942: 0x00
+    3943: 0x00
+    3944: 0x00
+    3945: 0x10
+    3946: 0x14
+    3947: 0x5d  ]
+    3948: 0x0f
+    3949: 0x13
+    394a: 0x5c  \
+    394b: 0x1a
+    394c: 0x12
+    394d: 0x1c
+    394e: 0x70  p
+    394f: 0x11
+    3950: 0x15
+    3951: 0x01
+    3952: 0x01
+    3953: 0x01
+    3954: 0x62  b
+    3955: 0x06
+    3956: 0x0a
+    3957: 0x61  a
+    3958: 0x07
+    3959: 0x0b
+    395a: 0x28  (
+    395b: 0x08
+    395c: 0x77  w
+    395d: 0x05
+    395e: 0x09
+    395f: 0x6f  o
+    3960: 0x00
+    3961: 0x00
+    3962: 0x00
+    3963: 0x03
+    3964: 0x00
+    3965: 0x01
+    3966: 0x02
+    3967: 0x5b  [
+    3968: 0x60  `
+    3969: 0x22  "
+    396a: 0x2c  ,
+    396b: 0x0e
+    396c: 0x1d
+    396d: 0x26  &
+    396e: 0x29  )
+    396f: 0x3f  ?
+    3970: 0x5f  _
+    3971: 0x21  !
+    3972: 0x2b  +
+    3973: 0x0d
+    3974: 0x1e
+    3975: 0x25  %
+    3976: 0x2a  *
+    3977: 0x3e  >
+    3978: 0x5e  ^
+    3979: 0x3b  ;
+    397a: 0x2f  /
+    397b: 0x0c
+    397c: 0x0c
+    397d: 0x24  $
+    397e: 0x23  #
+    397f: 0x6e  n
+    3980: 0x6e  n
+    3981: 0x6b  k
+    3982: 0x6b  k
+    3983: 0x6c  l
+    3984: 0x6c  l
+    3985: 0x6d  m
+    3986: 0x6d  m
+    3987: 0x02
+    3988: 0x00
+    3989: 0x00
+    398a: 0x00
+    398b: 0x00
+    398c: 0x00
+    398d: 0x40  @
+    398e: 0x00
+    398f: 0x00
+    3990: 0x0f
+    3991: 0x1e
+    3992: 0x2d  -
+    3993: 0x00
+    3994: 0x03
+    3995: 0x06
+    3996: 0x09
+    3997: 0x0c
+    3998: 0x01
+    3999: 0x00
+    399a: 0x20   
+    399b: 0x00
+    399c: 0x01
+    399d: 0x00
+    399e: 0x20   
+    399f: 0x00
+    39a0: 0x03
+    39a1: 0x00
+    39a2: 0xe0
+    39a3: 0xff
+    39a4: 0xff
+    39a5: 0xff
+    39a6: 0x60  `
+    39a7: 0x00
+    39a8: 0x01
+    39a9: 0x00
+    39aa: 0xe0
+    39ab: 0xff
+    39ac: 0xff
+    39ad: 0xff
+    39ae: 0x20   
+    39af: 0x00
+    39b0: 0xc2
+    39b1: 0xff
+    39b2: 0x02
+    39b3: 0x00
+    39b4: 0xfe
+    39b5: 0xff
+    39b6: 0x00
+    39b7: 0x00
+    39b8: 0x00
+    39b9: 0x00
+    39ba: 0xc0
+    39bb: 0xff
+    39bc: 0x40  @
+    39bd: 0x00
+    39be: 0x3e  >
+    39bf: 0x00
+    39c0: 0x01
+    39c1: 0x02
+    39c2: 0x03
+    39c3: 0x00
+    39c4: 0x03
+    39c5: 0x00
+    39c6: 0x01
+    39c7: 0x02
+    39c8: 0xff
+    39c9: 0xff
+    39ca: 0x60  `
+    39cb: 0x00
+    39cc: 0x03
+    39cd: 0x00
+    39ce: 0xe0
+    39cf: 0xff
+    39d0: 0x01
+    39d1: 0x00
+    39d2: 0x01
+    39d3: 0x00
+    39d4: 0x01
+    39d5: 0x02
+    39d6: 0x03
+    39d7: 0x00
+    39d8: 0x02
+    39d9: 0x03
+    39da: 0x00
+    39db: 0x01
+
+    39dc: 0x01
+    39dd: 0x00
+    39de: 0x01
+    39df: 0x00
+
+    39e0: 0x0c
+    39e1: 0x0c
+    39e2: 0x23  #
+    39e3: 0x1f
+    39e4: 0x1f
+    39e5: 0x23  #
+    39e6: 0x3d  =
+    39e7: 0x3d  =
+    39e8: 0x04
+    39e9: 0x00
+    39ea: 0xc0
+    39eb: 0xff
+    39ec: 0xfe
+    39ed: 0xff
+    39ee: 0x80
+    39ef: 0x00
+    39f0: 0xff
+    39f1: 0xff
+    39f2: 0x20   
+    39f3: 0x00
+    39f4: 0x01
+    39f5: 0x00
+    39f6: 0xe0
+    39f7: 0xff
+    39f8: 0xe3
+    39f9: 0xff
+    39fa: 0xdf
+    39fb: 0xff
+    39fc: 0x1f
+    39fd: 0x00
+    39fe: 0x61  a
+    39ff: 0x00
+    3a00: 0x20   
+    3a01: 0x00
+    3a02: 0x01
+    3a03: 0x00
+    3a04: 0xe0
+    3a05: 0xff
+    3a06: 0xff
+    3a07: 0xff
+    3a08: 0x1f
+    3a09: 0x0c
+    3a0a: 0x23  #
+    3a0b: 0x3d  =
+    3a0c: 0x23  #
+    3a0d: 0x00
+    3a0e: 0xe1
+    3a0f: 0xff
+    3a10: 0xdf
+    3a11: 0xff
+    3a12: 0x5f  _
+    3a13: 0x00
+    3a14: 0xe0
+    3a15: 0xff
+    3a16: 0xff
+    3a17: 0xff
+    3a18: 0x20   
+    3a19: 0x00
+    3a1a: 0x01
+    3a1b: 0x00
+    3a1c: 0x0c
+    3a1d: 0x23  #
+    3a1e: 0x3d  =
+    3a1f: 0x1f
+    3a20: 0x01
+    3a21: 0x00
+    3a22: 0xe0
+    3a23: 0xff
+    3a24: 0xff
+    3a25: 0xff
+    3a26: 0x20   
+    3a27: 0x00
+
+    3a28: 0x01
+    3a29: 0x02
+    3a2a: 0x03
+    3a2b: 0x04
+    3a2c: 0x05
+
+    3a2d: 0x00
+    3a2e: 0x00
+    3a2f: 0x00
+    3a30: 0x00
+    3a31: 0x00
+
+    3a32: 0xe1
+    3a33: 0xff
+    3a34: 0x1f
+    3a35: 0x00
+    3a36: 0x21  !
+    3a37: 0x00
+    3a38: 0x21  !
+    3a39: 0x00
+    3a3a: 0x40  @
+    3a3b: 0x00
+    3a3c: 0x02
+    3a3d: 0x00
+    3a3e: 0xc0
+    3a3f: 0xff
+    3a40: 0xfe
+    3a41: 0xff
+
+    3a42: 0xff
+    3a43: 0x00
+    3a44: 0x01
+    3a45: 0x00
+
+    3a46: 0x00
+    3a47: 0x01
+    3a48: 0x00
+    3a49: 0xff
+
+    3a4a: 0x01
+    3a4b: 0x00
+    3a4c: 0xe0
+    3a4d: 0xff
+    3a4e: 0xff
+    3a4f: 0xff
+    3a50: 0x20   
+    3a51: 0x00
+
+    3a52: 0x01
+    3a53: 0x00
+    3a54: 0xff
+    3a55: 0x00
+
+    3a56: 0x00
+    3a57: 0xff
+    3a58: 0x00
+    3a59: 0x01
+
+    3a5a: 0x00
+    3a5b: 0x01
+    3a5c: 0x1f
+    3a5d: 0x0c
+    3a5e: 0x23  #
+    3a5f: 0x3d  =
+
+    3a60: 0x02
+    3a61: 0x03
+    3a62: 0x00
+    3a63: 0x01
+
+    3a64: 0x1f
+    3a65: 0x0c
+    3a66: 0x0c
+    3a67: 0x23  #
+    3a68: 0x23  #
+    3a69: 0x3d  =
+    3a6a: 0x1f
+    3a6b: 0x3d  =
+
+    3a6c: 0x01
+    3a6d: 0x03
+    3a6e: 0x02
+    3a6f: 0x00
+    3a70: 0x03
+    3a71: 0x01
+    3a72: 0x02
+    3a73: 0x00
+
+    3a74: 0x01
+    3a75: 0x00
+    3a76: 0xe0
+    3a77: 0xff
+    3a78: 0xff
+    3a79: 0xff
+    3a7a: 0x20   
+    3a7b: 0x00
+    3a7c: 0x01
+    3a7d: 0x23  #
+    3a7e: 0x01
+    3a7f: 0x3d  =
+    3a80: 0x1f
+    3a81: 0x00
+    3a82: 0x3d  =
+    3a83: 0x00
+    3a84: 0x01
+    3a85: 0x0c
+    3a86: 0x01
+    3a87: 0x1f
+    3a88: 0x0c
+    3a89: 0x00
+    3a8a: 0x23  #
+    3a8b: 0x00
+
+    3a8c: 0x1f
+    3a8d: 0x0c
+    3a8e: 0x23  #
+    3a8f: 0x3d  =
+
+    3a90: 0xf0
+    3a91: 0x11
+    3a92: 0xea
+    3a93: 0xc9
+    3a94: 0x00
+    3a95: 0xf0
+    3a96: 0x0f
+    3a97: 0xea
+    3a98: 0xa5
+    3a99: 0x25  %
+    3a9a: 0x85
+    3a9b: 0x69  i
+    3a9c: 0xa5
+    3a9d: 0x26  &
+    3a9e: 0x85
+    3a9f: 0x6a  j
+    3aa0: 0x4c  L
+    3aa1: 0x3c  <
+    3aa2: 0x2c  ,
+    3aa3: 0x4c  L
+    3aa4: 0xb2
+    3aa5: 0x34  4
+    3aa6: 0x4c  L
+    3aa7: 0x9f
+    3aa8: 0x34  4
+    3aa9: 0x79  y
