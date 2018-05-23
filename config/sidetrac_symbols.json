@@ -15,6 +15,12 @@
         {"start": "0x330e", "end": "0x38ea", "type": "code"},
         {"start": "0x38eb", "end": "0x3aa9", "type": "data"}
     ],
+    "variables": [
+      "0x13": {"name": "Credits", "size": "b"},
+      "0x0A": {"name": "p1_score", "size": "w"},
+      "0x0C": {"name": "p2_score", "size": "w"},
+      
+    ],
     "functions": {
       "0x29c5": { "name": "wait(x)" },
       "0x29cb": { "name": "wait()" },
@@ -34,8 +40,11 @@
       "0x304b": { "name": "print_BCD_word()" },
       "0x305c": { "name": "print_BCD_byte()" },
       "0x3070": { "name": "trim_leading_zeros()" },
+      "0x323e": { "name": "draw_tracks()" },
       "0x330e": { "name": "inc_xpos()" },
       "0x3316": { "name": "xpos_plus_3()" },
+      "0x3323": { "name": "inc_word_25" },
+      "0x3330": { "name": "dec_word_25" },
       "0x333d": { "name": "dec_xpos()" }
     },
     "ports": [
