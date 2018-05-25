@@ -38,9 +38,10 @@
       "0x323e": { "name": "draw_tracks()" },
       "0x330e": { "name": "inc_xpos()" },
       "0x3316": { "name": "xpos_plus_$3()" },
-      "0x3323": { "name": "inc_word_25" },
-      "0x3330": { "name": "dec_word_25" },
+      "0x3323": { "name": "inc_word_$25" },
+      "0x3330": { "name": "dec_word_$25" },
       "0x333d": { "name": "dec_xpos()" },
+      "0x3598": { "name": "handle_input()" },
       "0x36e5": { "name": "pickup_passenger_maybe()" },
       "0x37b6": { "name": "move_player()" }
     },
@@ -64,9 +65,10 @@
         "0x313c": "track_quadrant"
     },
     "variables": {
-        "0x0013": {"name": "Credits", "type": "byte"},
+        "0x0002": {"name": "flags", "type": "byte", "desc": "But 7 set if playing, Bit 6 = 2 player game, Bit 4 = player 2 when set"},
         "0x000A": {"name": "p1_score", "type": "word"},
-        "0x000C": {"name": "p2_score", "type": "word"},      
+        "0x000C": {"name": "p2_score", "type": "word"},     
+        "0x0013": {"name": "Credits", "type": "byte"}, 
         "0x0069": {"name": "player_screen_address", "type": "word"},
         "0x006C": {"name": "sprite", "type": "byte"},
         "0x006F": {"name": "player_xpos", "type": "byte"},

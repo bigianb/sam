@@ -101,7 +101,7 @@ IRQ vector: 0x2b0e
     28d8: STA $13
     28da: CLD
     28db: LDA #c0
-    28dd: STA $02
+    28dd: STA $02                           ; $02 = 0xC0 ... start 2 player game
     28df: LDA #80
     28e1: JSR $2bee  audio_on()
     28e4: JSR $2931
@@ -112,28 +112,30 @@ IRQ vector: 0x2b0e
     28f1: BMI *8   -> 0x28fb
     28f3: NOP
     28f4: BIT $02
-    28f6: BMI *-12   -> 0x28ec
+    28f6: BMI *-12   -> 0x28ec              ; loop while playing
     28f8: JMP $282b
     28fb: BIT $02
     28fd: BVC *12   -> 0x290b
-    28ff: NOP
+    28ff: NOP                               ; here if $02 & 0x40 ... 2 player game
     2900: LDA $02
-    2902: EOR #10
+    2902: EOR #10                           ; $02 ^= 0x10   toggle active player
     2904: STA $02
     2906: AND #10
     2908: BNE *24   -> 0x2922
     290a: NOP
+
     290b: DEC $0e
     290d: BPL *19   -> 0x2922
     290f: NOP
     2910: LDA #00
-    2912: STA $02
+    2912: STA $02                       ; $02 = 0
     2914: STA $0e
     2916: LDA #00
     2918: STA $8e
     291a: LDX #02
     291c: JSR $29c5  wait(x)
     291f: JMP $282b
+
     2922: JSR $2934
     2925: LDA #00
     2927: STA $8e
@@ -146,13 +148,15 @@ IRQ vector: 0x2b0e
     293a: LDA $02
     293c: AND #10
     293e: BEQ *9   -> 0x2949
-    2940: NOP
+    2940: NOP                       ; here if $02 & 0x10 ... i.e. player 2 active
     2941: LDX #10
     2943: JSR $2e73  print_string(x)         ; Player 2
     2946: JMP $294e
+
     2949: LDX #0f
     294b: JSR $2e73  print_string(x)         ; Player 1
     294e: JSR $2975
+
     2951: LDX #01
     2953: JSR $29c5  wait(x)
     2956: JSR $30ff
@@ -465,6 +469,7 @@ IRQ_Handler
     2b60: PLA
     2b61: PLP
     2b62: RTI
+
     2b63: LDA $02
     2b65: BMI *2   -> 0x2b69
     2b67: NOP
@@ -473,6 +478,7 @@ IRQ_Handler
     2b6c: JSR $2b8f
     2b6f: JSR $2b73
     2b72: RTS
+
     2b73: BIT $8a
     2b75: BPL *23   -> 0x2b8e
     2b77: NOP
@@ -824,7 +830,7 @@ test_for_p1_start()
     2dfe: JSR $2be9  audio_off()
     2e01: RTS
     2e02: LDA #00
-    2e04: STA $02
+    2e04: STA $02                           ; $02 = 0
     2e06: LDA #ff
     2e08: STA $5100  sprite_no
     2e0b: JSR $2e58
@@ -835,13 +841,13 @@ test_for_p1_start()
     2e16: JSR $334a
     2e19: JSR $2cb0  test_for_coin()
     2e1c: LDA $13
-    2e1e: BNE *78   -> 0x2e6e
+    2e1e: BNE *78   -> 0x2e6e       start game
     2e20: NOP
     2e21: JSR $323e  draw_tracks()
     2e24: JSR $298e
     2e27: JSR $2cb0  test_for_coin()
     2e2a: LDA $13
-    2e2c: BNE *64   -> 0x2e6e
+    2e2c: BNE *64   -> 0x2e6e       start game
     2e2e: NOP
     2e2f: LDA #30
     2e31: STA $77
@@ -854,7 +860,7 @@ test_for_p1_start()
     2e40: STA $8e
     2e42: JSR $2cb0  test_for_coin()
     2e45: LDA $13
-    2e47: BNE *37   -> 0x2e6e
+    2e47: BNE *37   -> 0x2e6e       start game
     2e49: NOP
     2e4a: DEC $16
     2e4c: BNE *-27   -> 0x2e33
@@ -874,7 +880,7 @@ test_for_p1_start()
     2e69: DEC $15
     2e6b: BNE *-17   -> 0x2e5c
     2e6d: RTS
-    2e6e: LDA #80
+    2e6e: LDA #80                   ; $02 = 0x80 start game
     2e70: STA $02
     2e72: RTS
 
@@ -996,7 +1002,7 @@ increment_score()
     2fef: LDA $02
     2ff1: BMI *2   -> 0x2ff5
     2ff3: NOP
-    2ff4: RTS
+    2ff4: RTS           ; exit if attract mode
     2ff5: JSR $29d9
     2ff8: AND #07
     2ffa: CMP $17
@@ -1029,7 +1035,7 @@ increment_score()
     302a: LDA $02
     302c: AND #10
     302e: BEQ *5   -> 0x3035
-    3030: NOP
+    3030: NOP               ; player 2
     3031: LDX #0c
     3033: LDY #1c
     3035: LDA $00, X
@@ -1182,197 +1188,19 @@ trim_leading_zeros()
 	315c: 00, 63, 20, 20, 20, 20, 00, 20, 20, 20, 20, 20, 00, 20, 20, 20
     316c: 00, 20, 20, 23, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01, 01
 	317c: 00, 63, 20, 00, 20, 64, 20, 64, 20, 00, 20, 64, 20, 64, 20, 00
+    318c: 00, 20, 20, 00, 64, 20, 20, 20, 20, 00, 20, 20, 20, 20, 20, 00
+    319c: 00, 01, 01, 00, 20, 20, 23, 01, 01, 01, 01, 01, 01, 01, 01, 01
+    31ac: 00, 20, 20, 00, 64, 20, 00, 20, 65, 20, 65, 20, 00, 20, 65, 20
+    31bc: 00, 63, 20, 00, 20, 20, 00, 65, 20, 20, 20, 20, 00, 20, 20, 20
+    31cc: 00, 20, 20, 00, 01, 01, 00, 20, 20, 23, 01, 01, 01, 01, 01, 01
+    31dc: 00, 63, 20, 00, 20, 20, 00, 65, 20, 00, 20, 66, 20, 66, 20, 00
+    31ec: 00, 20, 20, 00, 64, 20, 00, 20, 20, 00, 66, 20, 20, 20, 20, 00
+    31fc: 00, 01, 01, 00, 20, 20, 00, 01, 01, 00, 20, 20, 23, 01, 01, 01
+    320c: 00, 20, 20, 00, 64, 20, 00, 20, 20, 00, 66, 20, 00, 20, 67, 20
+    321c: 00, 63, 20, 00, 20, 20, 00, 65, 20, 00, 20, 20, 00, 67, 20, 20	
+    322c: 00, 20, 20, 00, 01, 01, 00, 20, 20, 00, 01, 01, 00, 20, 20, 20 
 
-
-    318c: 0x00
-    318d: 0x20   
-    318e: 0x20   
-    318f: 0x00
-    3190: 0x64  d
-    3191: 0x20   
-    3192: 0x20   
-    3193: 0x20   
-    3194: 0x20   
-    3195: 0x00
-    3196: 0x20   
-    3197: 0x20   
-    3198: 0x20   
-    3199: 0x20   
-    319a: 0x20   
-    319b: 0x00
-
-    319c: 0x00
-    319d: 0x01
-    319e: 0x01
-    319f: 0x00
-    31a0: 0x20   
-    31a1: 0x20   
-    31a2: 0x23  #
-    31a3: 0x01
-    31a4: 0x01
-    31a5: 0x01
-    31a6: 0x01
-    31a7: 0x01
-    31a8: 0x01
-    31a9: 0x01
-    31aa: 0x01
-    31ab: 0x01
-
-    31ac: 0x00
-    31ad: 0x20   
-    31ae: 0x20   
-    31af: 0x00
-    31b0: 0x64  d
-    31b1: 0x20   
-    31b2: 0x00
-    31b3: 0x20   
-    31b4: 0x65  e
-    31b5: 0x20   
-    31b6: 0x65  e
-    31b7: 0x20   
-    31b8: 0x00
-    31b9: 0x20   
-    31ba: 0x65  e
-    31bb: 0x20  
-	
-    31bc: 0x00
-    31bd: 0x63  c
-    31be: 0x20   
-    31bf: 0x00
-    31c0: 0x20   
-    31c1: 0x20   
-    31c2: 0x00
-    31c3: 0x65  e
-    31c4: 0x20   
-    31c5: 0x20   
-    31c6: 0x20   
-    31c7: 0x20   
-    31c8: 0x00
-    31c9: 0x20   
-    31ca: 0x20   
-    31cb: 0x20  
-	
-    31cc: 0x00
-    31cd: 0x20   
-    31ce: 0x20   
-    31cf: 0x00
-    31d0: 0x01
-    31d1: 0x01
-    31d2: 0x00
-    31d3: 0x20   
-    31d4: 0x20   
-    31d5: 0x23  #
-    31d6: 0x01
-    31d7: 0x01
-    31d8: 0x01
-    31d9: 0x01
-    31da: 0x01
-    31db: 0x01
-
-    31dc: 0x00
-    31dd: 0x63  c
-    31de: 0x20   
-    31df: 0x00
-    31e0: 0x20   
-    31e1: 0x20   
-    31e2: 0x00
-    31e3: 0x65  e
-    31e4: 0x20   
-    31e5: 0x00
-    31e6: 0x20   
-    31e7: 0x66  f
-    31e8: 0x20   
-    31e9: 0x66  f
-    31ea: 0x20   
-    31eb: 0x00
-
-    31ec: 0x00
-    31ed: 0x20   
-    31ee: 0x20   
-    31ef: 0x00
-    31f0: 0x64  d
-    31f1: 0x20   
-    31f2: 0x00
-    31f3: 0x20   
-    31f4: 0x20   
-    31f5: 0x00
-    31f6: 0x66  f
-    31f7: 0x20   
-    31f8: 0x20   
-    31f9: 0x20   
-    31fa: 0x20   
-    31fb: 0x00
-
-    31fc: 0x00
-    31fd: 0x01
-    31fe: 0x01
-    31ff: 0x00
-    3200: 0x20   
-    3201: 0x20   
-    3202: 0x00
-    3203: 0x01
-    3204: 0x01
-    3205: 0x00
-    3206: 0x20   
-    3207: 0x20   
-    3208: 0x23  #
-    3209: 0x01
-    320a: 0x01
-    320b: 0x01
-
-    320c: 0x00
-    320d: 0x20   
-    320e: 0x20   
-    320f: 0x00
-    3210: 0x64  d
-    3211: 0x20   
-    3212: 0x00
-    3213: 0x20   
-    3214: 0x20   
-    3215: 0x00
-    3216: 0x66  f
-    3217: 0x20   
-    3218: 0x00
-    3219: 0x20   
-    321a: 0x67  g
-    321b: 0x20   
-
-    321c: 0x00
-    321d: 0x63  c
-    321e: 0x20   
-    321f: 0x00
-    3220: 0x20   
-    3221: 0x20   
-    3222: 0x00
-    3223: 0x65  e
-    3224: 0x20   
-    3225: 0x00
-    3226: 0x20   
-    3227: 0x20   
-    3228: 0x00
-    3229: 0x67  g
-    322a: 0x20   
-    322b: 0x20  
-	
-    322c: 0x00
-    322d: 0x20   
-    322e: 0x20   
-    322f: 0x00
-    3230: 0x01
-    3231: 0x01
-    3232: 0x00
-    3233: 0x20   
-    3234: 0x20   
-    3235: 0x00
-    3236: 0x01
-    3237: 0x01
-    3238: 0x00
-    3239: 0x20   
-    323a: 0x20   
-    323b: 0x20   
-
-    323c: 0x3c  <
-    323d: 0x31  1
+    323c: 0x313c
 
 draw_tracks()
     323e: JSR $2a16  set_videopage_0()
@@ -1492,6 +1320,8 @@ xpos_plus_$3()
     331f: NOP
     3320: INC $01
     3322: RTS
+
+inc_word_$25()
     3323: CLC
     3324: LDA $25
     3326: ADC #01
@@ -1500,6 +1330,8 @@ xpos_plus_$3()
     332c: NOP
     332d: INC $26
     332f: RTS
+
+dec_word_$25()
     3330: SEC
     3331: LDA $25
     3333: SBC #01
@@ -1555,6 +1387,7 @@ dec_xpos()
     338c: DEC $03
     338e: BPL *-35   -> 0x336d
     3390: RTS
+
     3391: JSR $3725
     3394: LDX $03
     3396: LDA $46, X
@@ -1568,7 +1401,7 @@ dec_xpos()
     33a5: STA $01
     33a7: LDY $46, X
     33a9: LDA $398f, Y
-    33ac: LDX $51
+    33ac: LDX $51               ; X = $51
     33ae: CLC
     33af: ADC $3993, X
     33b2: TAX
@@ -1599,6 +1432,7 @@ dec_xpos()
     33e6: LDA $38eb, X
     33e9: STA ($25), Y
     33eb: RTS
+
     33ec: LDA $51
     33ee: ASL A
     33ef: ASL A
@@ -1782,6 +1616,7 @@ dec_xpos()
     3550: DEY
     3551: JSR $3715
     3554: RTS
+
     3555: JSR $3391
     3558: LDX $03
     355a: LDA $46, X
@@ -1818,6 +1653,8 @@ dec_xpos()
     3593: ASL A
     3594: TAY
     3595: JMP $3570
+
+handle_input()
     3598: BIT $02
     359a: BMI *2   -> 0x359e
     359c: NOP
@@ -1852,8 +1689,8 @@ dec_xpos()
     35c6: INX						left	x = 2
     35c7: INX						up		x = 1
     35c8: PLA						right   x = 0
-    35c9: JSR $3725
-    35cc: STX $05
+    35c9: JSR $3725         ; restore $25.w from $30[$03].w
+    35cc: STX $05           ; $05 = direction
     35ce: LDA $46
     35d0: CMP $05
     35d2: BNE *50   -> 0x3606
@@ -2022,7 +1859,7 @@ pickup_passenger_maybe():
     3703: JSR $2fef
     3706: RTS
 
-    3707: CLC
+    3707: CLC               ; $25.w += screen_pos
     3708: LDA $25
     370a: ADC $00
     370c: STA $25
@@ -2030,20 +1867,22 @@ pickup_passenger_maybe():
     3710: ADC $26
     3712: STA $26
     3714: RTS
+
     3715: JSR $3707
     3718: LDA $03
     371a: ASL A
-    371b: TAX
+    371b: TAX               ; X = $03 * 2
     371c: LDA $25
     371e: STA $30, X
     3720: LDA $26
-    3722: STA $31, X
+    3722: STA $31, X        ; $(30 + $03*2).w = $25.w
     3724: RTS
+
     3725: LDA $03
     3727: ASL A
-    3728: TAY
+    3728: TAY               ; Y = $03 * 2
     3729: LDA $0030, Y
-    372c: STA $25
+    372c: STA $25           $25.w = $(30 + $03*2).w
     372e: LDA $0031, Y
     3731: STA $26
     3733: RTS
