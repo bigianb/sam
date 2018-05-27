@@ -19,6 +19,7 @@ struct CLOptions
 
 	bool errorReported;
 	bool allDone;
+	bool dump;
 	std::string rombase;
 	std::string configbase;
 };
@@ -39,6 +40,7 @@ static CLOptions parseCommandLineOptions(int argc, char *argv[])
 	po::options_description desc("Options");
 	desc.add_options()
 	("help,h", "Print help messages")
+	("dump,d", "Dump disassembly")
 	("rombase", po::value<string>()->default_value(romBase), "Rom Base Directory")
 	("configbase", po::value<string>()->default_value(configBase), "Config Base Directory");
 	po::variables_map vm;
@@ -56,6 +58,7 @@ static CLOptions parseCommandLineOptions(int argc, char *argv[])
 		}
 		retval.rombase = vm["rombase"].as<std::string>();
 		retval.configbase = vm["configbase"].as<std::string>();
+		retval.dump = vm.count("dump");
 		po::notify(vm);
 	}
 	catch (boost::program_options::required_option &e)
@@ -76,6 +79,50 @@ static CLOptions parseCommandLineOptions(int argc, char *argv[])
 	}
 
 	return retval;
+}
+
+void dump(std::ostream& os, int fromPC, int toPC, DebugInfo& debugInfo, m6502& cpu, AddressBus& bus)
+{
+	auto irq_vec = bus.readByte(0x3FFF) * 256 + bus.readByte(0x3FFE);
+
+	os << "Initial PC: 0x" << std::setw(4) << std::setfill('0') << std::hex << fromPC << std::endl;
+	os << "IRQ vector: 0x" << std::setw(4) << std::setfill('0') << std::hex << irq_vec << std::endl;
+
+	int pc = fromPC;
+	while (pc < toPC)
+	{
+		std::ostringstream stringStream;
+		int pc_inc = 1;
+		if (debugInfo.getType(pc) == DebugInfo::RangeType::eCODE) {
+			auto funcname = debugInfo.getFunctionName(pc);
+			if (funcname != "") {
+				stringStream << std::endl << funcname << std::endl;
+			}
+			stringStream << "    " << std::setw(4) << std::setfill('0') << std::hex << pc << ": ";
+			auto desc = cpu.disassemble(pc, debugInfo);
+			stringStream << desc.line;
+			pc_inc = desc.numBytes;
+		}
+		else {
+			stringStream << "    " << std::setw(4) << std::setfill('0') << std::hex << pc << ": ";
+			uint8_t val = bus.readByte(pc);
+			stringStream << "0x" << std::setw(2) << std::setfill('0') << std::hex << (int)val;
+			if (val >= 0x20 && val < 0x80) {
+				stringStream << "  " << val;
+			}
+		}
+		auto comment = debugInfo.getComment(pc);
+		if (comment != "") {
+			auto pos = stringStream.str().length();
+			while (pos < 45) {
+				stringStream << " ";
+				++pos;
+			}
+			stringStream << "; " << comment;
+		}
+		os << stringStream.str() << std::endl;
+		pc += pc_inc;
+	}
 }
 
 int main(int argc, char *argv[])
@@ -107,46 +154,9 @@ int main(int argc, char *argv[])
 
 	// 0x3f00 is mirrored to 0xFF00
 	auto pc = bus.readByte(0x3FFD) * 256 + bus.readByte(0x3FFC);
-	auto irq_vec = bus.readByte(0x3FFF) * 256 + bus.readByte(0x3FFE);
-
-	std::cout << "Initial PC: 0x" << std::setw(4) << std::setfill('0') << std::hex << pc << std::endl;
-	std::cout << "IRQ vector: 0x" << std::setw(4) << std::setfill('0') << std::hex << irq_vec << std::endl;
-
-	while(pc < 0x3aaa)
-	{
-		std::ostringstream stringStream;
-		int pc_inc=1;
-		if (debugInfo.getType(pc) == DebugInfo::RangeType::eCODE) {
-			auto funcname = debugInfo.getFunctionName(pc);
-			if (funcname != "") {
-				stringStream << std::endl << funcname << std::endl;
-			}
-			stringStream << "    " << std::setw(4) << std::setfill('0') << std::hex << pc << ": ";
-			auto desc = cpu.disassemble(pc, debugInfo);
-			stringStream << desc.line;
-			pc_inc = desc.numBytes;
-		}
-		else {
-			stringStream << "    " << std::setw(4) << std::setfill('0') << std::hex << pc << ": ";
-			uint8_t val = bus.readByte(pc);
-			stringStream << "0x" << std::setw(2) << std::setfill('0') << std::hex << (int)val;
-			if (val >= 0x20 && val < 0x80) {
-				stringStream << "  " << val;
-			}
-		}
-		auto comment = debugInfo.getComment(pc);
-		if (comment != "") {
-			auto pos = stringStream.str().length();
-			while (pos < 45){
-				stringStream << " ";
-				++pos;
-			}
-			stringStream << "; " << comment;
-		}
-		std::cout << stringStream.str() << std::endl;
-		pc += pc_inc;
+	if (options.dump) {
+		dump(std::cout, pc, 0x3aaa, debugInfo, cpu, bus);
 	}
-
 	return 0;
 }
 /*
