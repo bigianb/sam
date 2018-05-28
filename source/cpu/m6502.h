@@ -8,6 +8,7 @@ class m6502
 {
 public:
 	m6502(AddressBus& ab) : addressBus(ab) {}
+	void reset();
 	void step();
 	
 	class OpcodeDesc
@@ -24,10 +25,11 @@ public:
 	unsigned char	regX;
 	unsigned char	regY;
 
-	unsigned short SPReg;
-	unsigned short PCReg;
+	unsigned short regSP;
+	unsigned short regPC;
 
 private:
 	AddressBus & addressBus;
 
+	int cycleCount;
 };

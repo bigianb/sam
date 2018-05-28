@@ -153,7 +153,10 @@ int main(int argc, char *argv[])
 	debugInfo.read(options.configbase + "/sidetrac_symbols.json");
 
 	// 0x3f00 is mirrored to 0xFF00
-	auto pc = bus.readByte(0x3FFD) * 256 + bus.readByte(0x3FFC);
+	bus.setMirror(0xFF00, 0xFFFF, 0x3F00);
+	cpu.reset();
+
+	auto pc = cpu.regPC;
 	if (options.dump) {
 		dump(std::cout, pc, 0x3aaa, debugInfo, cpu, bus);
 	}

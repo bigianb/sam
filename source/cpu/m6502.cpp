@@ -401,3 +401,13 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc, DebugInfo& debugInfo)
 	desc.line = stringStream.str();
 	return desc;
 }
+
+void m6502::reset()
+{
+	regPC = addressBus.readByte(0xFFFD) * 256 + addressBus.readByte(0xFFFC);
+}
+
+void m6502::step()
+{
+
+}
