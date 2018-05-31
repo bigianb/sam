@@ -34,7 +34,8 @@ static CLOptions parseCommandLineOptions(int argc, char *argv[])
 	std::string romBase("/Users/ian/roms/mame");
 	std::string configBase("/Users/ian/dev/sam/config");
 #else
-	string romBase("/home/ian/roms/mame");
+	std::string romBase("/home/ian/roms/mame");
+	std::string configBase("/home/ian/dev/sam/config");
 #endif
 	namespace po = boost::program_options;
 	po::options_description desc("Options");
