@@ -1,0 +1,26 @@
+language: cpp
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-7
+
+before_install:
+ - pip install --user cpp-coveralls
+
+before_script:
+  - sudo apt-get update -qq
+  - sudo apt-get install libboost-thread-dev libboost-system-dev libboost-test-dev
+
+script:
+  - which gcov-7
+  - export CC=gcc-7
+  - export CXX=g++-7
+  - cmake -DCOVERAGE=1 -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON . 
+  - make
+  - ctest
+
+after_success:
+ - coveralls --verbose --gcov /usr/bin/gcov-7
