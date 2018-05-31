@@ -29,6 +29,9 @@ public:
 	unsigned short regPC;
 
 private:
+	std::uint8_t readIndexedIndirect();
+
+private:
 	AddressBus & addressBus;
 
 	int cycleCount;

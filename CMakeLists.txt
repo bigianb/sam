@@ -79,4 +79,4 @@ add_executable(sam_sidetrac ${SIDETRAC_FILES})
 target_link_libraries(sam_sidetrac cpu core ${Boost_LIBRARIES})
 
 include(BoostTestHelpers.cmake)
-#add_boost_test(tests/emu/attotime.cpp core)
+add_boost_test(source/cpu/m6502_test.cpp cpu core)

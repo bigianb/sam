@@ -1,9 +1,9 @@
-function(add_boost_test SOURCE_FILE_NAME DEPENDENCY_LIB)
+function(add_boost_test SOURCE_FILE_NAME DEPENDENCY_LIB1 DEPENDENCY_LIB2)
     get_filename_component(TEST_EXECUTABLE_NAME ${SOURCE_FILE_NAME} NAME_WE)
 
     add_executable(${TEST_EXECUTABLE_NAME} ${SOURCE_FILE_NAME})
     target_link_libraries(${TEST_EXECUTABLE_NAME} 
-                          ${DEPENDENCY_LIB} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+                          ${DEPENDENCY_LIB1} ${DEPENDENCY_LIB2} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
     file(READ "${SOURCE_FILE_NAME}" SOURCE_FILE_CONTENTS)
     string(REGEX MATCHALL "BOOST_AUTO_TEST_CASE\\( *([A-Za-z_0-9]+) *\\)" 
