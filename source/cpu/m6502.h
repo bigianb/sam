@@ -28,11 +28,17 @@ public:
 	unsigned short regSP;
 	unsigned short regPC;
 
+	int cycleCount;
+
+	bool zFlag;
+	bool nFlag;
+
 private:
 	std::uint8_t readIndexedIndirect();
+	std::uint8_t readZeroPageValue();
+	void doORA(std::uint8_t val);
 
 private:
 	AddressBus & addressBus;
 
-	int cycleCount;
 };

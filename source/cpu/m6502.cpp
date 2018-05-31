@@ -416,6 +416,20 @@ std::uint8_t m6502::readIndexedIndirect()
 	return addressBus.readByte(zPageAddr);
 }
 
+std::uint8_t m6502::readZeroPageValue()
+{
+	// e.g. OPCODE $nn
+	std::uint8_t zPageAddr = addressBus.readByte(regPC + 1);
+	return addressBus.readByte(zPageAddr);
+}
+
+void m6502::doORA(std::uint8_t val)
+{
+	regA |= val;
+	zFlag = regA == 0;
+	nFlag = regA >= 0x80;
+}
+
 void m6502::step()
 {
 	int opcode = addressBus.readByte(regPC);
@@ -425,14 +439,18 @@ void m6502::step()
 		case 0x01:
 			// ORA ($nn,X)
 			{
-				regA |= readIndexedIndirect();
+				doORA(readIndexedIndirect());
 				regPC += 2;
 				cycleCount += 6;
 			}
 			break;
 		case 0x05:
-			//formatZPageInstruction(stringStream, "ORA", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			// ORA $nn
+			{
+				doORA(readZeroPageValue());
+				regPC += 2;
+				cycleCount += 3;
+			}
 			break;
 		case 0x06:
 			//formatZPageInstruction(stringStream, "ASL", addressBus.readByte(pc + 1));
