@@ -430,6 +430,15 @@ void m6502::doORA(std::uint8_t val)
 	nFlag = regA >= 0x80;
 }
 
+std::uint8_t m6502::doASL(std::uint8_t val)
+{
+	std::uint8_t outval = val << 1;
+	zFlag = outval == 0;
+	nFlag = outval >= 0x80;
+	cFlag = val >= 0x80;
+	return outval;
+}
+
 void m6502::step()
 {
 	int opcode = addressBus.readByte(regPC);
@@ -453,22 +462,43 @@ void m6502::step()
 			}
 			break;
 		case 0x06:
-			//formatZPageInstruction(stringStream, "ASL", addressBus.readByte(pc + 1));
-			//desc.numBytes = 2;
+			{
+				// ASL $nn
+				std::uint8_t zPageAddr = addressBus.readByte(regPC + 1);
+				std::uint8_t newVal = doASL(addressBus.readByte(zPageAddr));
+				addressBus.writeByte(zPageAddr, newVal);
+				regPC += 2;
+				cycleCount += 5;
+			}
 			break;
 		case 0x09:
-			//formatImmediateInstruction(stringStream, "ORA", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			// ORA #nn
+			{
+				doORA(addressBus.readByte(regPC + 1));
+				regPC += 2;
+				cycleCount += 2;
+			}
 			break;
 		case 0x08:
 			//stringStream << "PHP";
 			break;
 		case 0x0A:
-			//stringStream << "ASL A";
+			{
+				// ASL A
+				regA = doASL(regA);
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0x0e:
-			//formatAbsoluteInstructionR(stringStream, "ASL", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
-			//desc.numBytes = 3;
+		{
+			// ASL $nnnn
+			std::uint16_t addr = addressBus.readByte(regPC + 1) + (addressBus.readByte(regPC + 2) << 8);
+			std::uint8_t newVal = doASL(addressBus.readByte(addr));
+			addressBus.writeByte(addr, newVal);
+			regPC += 3;
+			cycleCount += 6;
+		}
 			break;
 		case 0x10:
 			//formatRelativeInstruction(stringStream, "BPL", addressBus.readByte(pc+1), pc);

@@ -19,6 +19,74 @@ BOOST_AUTO_TEST_CASE(test_reset)
     BOOST_CHECK_EQUAL(cpu.regPC, 0x0123);
 }
 
+BOOST_AUTO_TEST_CASE(test_asl_instructions)
+{
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	ram.bytes[0x0123] = 0x06;		// ASL $nn
+	ram.bytes[0x0124] = 0x10;
+
+	auto desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "ASL $10");
+
+	ram.bytes[0x10] = 0xC3;
+
+	cpu.cycleCount = 0;
+	cpu.regA = 0x11;
+	cpu.regPC = 0x0123;
+	cpu.nFlag = false;
+	cpu.zFlag = true;
+	cpu.cFlag = false;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regA, 0x11);
+	BOOST_CHECK_EQUAL(ram.bytes[0x10], 0x86);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 5);
+	BOOST_CHECK(cpu.nFlag);
+	BOOST_CHECK(!cpu.zFlag);
+	BOOST_CHECK(cpu.cFlag);
+
+	ram.bytes[0x0123] = 0x0A;		// ASL A
+
+	desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "ASL A");
+
+	cpu.cycleCount = 0;
+	cpu.regA = 0x11;
+	cpu.regPC = 0x0123;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regA, 0x22);
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x0124);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 2);
+
+	ram.bytes[0x0123] = 0x0E;		// ASL $nnnn
+	ram.bytes[0x0124] = 0x10;
+	ram.bytes[0x0125] = 0x03;
+
+	desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "ASL $0310");
+
+	ram.bytes[0x310] = 0xC3;
+
+	cpu.cycleCount = 0;
+	cpu.regA = 0x11;
+	cpu.regPC = 0x0123;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regA, 0x11);
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x126);
+	BOOST_CHECK_EQUAL(ram.bytes[0x310], 0x86);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 6);
+}
+
+
 BOOST_AUTO_TEST_CASE(test_or_instructions)
 {
 	Ram ram(64 * 1024);
@@ -84,4 +152,18 @@ BOOST_AUTO_TEST_CASE(test_or_instructions)
 	cpu.step();
 	BOOST_CHECK_EQUAL(cpu.regA, 0x33);
 	BOOST_CHECK_EQUAL(cpu.cycleCount, 3);
+
+	// immediate page variant. Flag setting is common, so just test the value.
+	ram.bytes[0x0123] = 0x09;		// ORA #nn
+	ram.bytes[0x0124] = 0x44;
+	desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "ORA #44");
+
+	cpu.regPC = 0x0123;
+	cpu.regA = 0x11;
+	ram.bytes[0x10] = 0x22;
+	cpu.cycleCount = 0;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regA, 0x55);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 2);
 }

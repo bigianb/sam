@@ -16,6 +16,7 @@ class DirectAddressBus : public AddressBus
 public:
 	DirectAddressBus(Ram& r) : ram(r) {}
 	std::uint8_t readByte(std::uint32_t address);
+	void writeByte(std::uint32_t address, std::uint8_t val);
 
 	void setRam(Ram& ramIn) { ram = ramIn; }
 
