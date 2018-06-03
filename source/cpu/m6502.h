@@ -21,24 +21,30 @@ public:
 
 	OpcodeDesc disassemble(unsigned short pc, DebugInfo& info);
 
-	unsigned char	regA;
-	unsigned char	regX;
-	unsigned char	regY;
+	std::uint8_t	regA;
+	std::uint8_t	regX;
+	std::uint8_t	regY;
 
-	unsigned short regSP;
-	unsigned short regPC;
+	std::uint8_t	regSP;
+	std::uint16_t	regPC;
 
 	int cycleCount;
 
+	// Status flags
 	bool zFlag;
+	bool vFlag;
 	bool nFlag;
 	bool cFlag;
+	bool decimalMode;
+	bool interruptDisable;
 
 private:
 	std::uint8_t readIndexedIndirect();
 	std::uint8_t readZeroPageValue();
 	void doORA(std::uint8_t val);
 	std::uint8_t doASL(std::uint8_t val);
+	void pushByte(std::uint8_t val);
+	std::uint8_t popByte();
 
 private:
 	AddressBus & addressBus;

@@ -423,6 +423,20 @@ std::uint8_t m6502::readZeroPageValue()
 	return addressBus.readByte(zPageAddr);
 }
 
+void m6502::pushByte(std::uint8_t val)
+{
+	std::uint16_t addr = regSP + 0x100;
+	addressBus.writeByte(addr, val);
+	regSP -= 1;
+}
+
+std::uint8_t m6502::popByte()
+{
+	regSP += 1;
+	std::uint16_t addr = regSP + 0x100;
+	return addressBus.readByte(addr);
+}
+
 void m6502::doORA(std::uint8_t val)
 {
 	regA |= val;
@@ -480,7 +494,33 @@ void m6502::step()
 			}
 			break;
 		case 0x08:
-			//stringStream << "PHP";
+			// PHP
+			{
+			/*
+				The flags are copied to memory in this arrangement:
+
+				Bit 7 : Negative
+				Bit 6 : Overflow
+				Bit 5 : Always set
+				Bit 4 : Clear if interrupt vectoring, set if BRK or PHP
+				Bit 3 : Decimal mode
+				Bit 2 : Interrupt disable
+				Bit 1 : Zero
+				Bit 0 : Carry
+			*/
+				std::uint8_t flags = 0x30;
+				if (nFlag) { flags |= 0x80; }
+				if (vFlag) { flags |= 0x40; }
+				if (decimalMode) { flags |= 0x08; }
+				if (interruptDisable) { flags |= 0x04; }
+				if (zFlag) { flags |= 0x02; }
+				if (cFlag) { flags |= 0x01; }
+
+				pushByte(flags);
+
+				regPC += 1;
+				cycleCount += 3;
+			}
 			break;
 		case 0x0A:
 			{
@@ -491,14 +531,14 @@ void m6502::step()
 			}
 			break;
 		case 0x0e:
-		{
-			// ASL $nnnn
-			std::uint16_t addr = addressBus.readByte(regPC + 1) + (addressBus.readByte(regPC + 2) << 8);
-			std::uint8_t newVal = doASL(addressBus.readByte(addr));
-			addressBus.writeByte(addr, newVal);
-			regPC += 3;
-			cycleCount += 6;
-		}
+			{
+				// ASL $nnnn
+				std::uint16_t addr = addressBus.readByte(regPC + 1) + (addressBus.readByte(regPC + 2) << 8);
+				std::uint8_t newVal = doASL(addressBus.readByte(addr));
+				addressBus.writeByte(addr, newVal);
+				regPC += 3;
+				cycleCount += 6;
+			}
 			break;
 		case 0x10:
 			//formatRelativeInstruction(stringStream, "BPL", addressBus.readByte(pc+1), pc);
@@ -524,7 +564,19 @@ void m6502::step()
 			//desc.numBytes = 2;
 			break;
 		case 0x28:
-			//stringStream << "PLP";
+			{
+				// PLP
+				std::uint8_t flags = popByte();
+				nFlag = (flags & 0x80) == 0x80;
+				vFlag = (flags & 0x40) == 0x40;
+				decimalMode = (flags & 0x08) == 0x08;
+				interruptDisable = (flags & 0x04) == 0x04;
+				zFlag = (flags & 0x02) == 0x02;
+				cFlag = (flags & 0x01) == 0x01;
+
+				regPC += 1;
+				cycleCount += 4;
+			}
 			break;
 		case 0x29:
 			//formatImmediateInstruction(stringStream, "AND", addressBus.readByte(pc+1));
