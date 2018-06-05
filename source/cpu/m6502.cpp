@@ -133,6 +133,10 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc, DebugInfo& debugInfo)
 			formatAbsoluteInstructionR(stringStream, "JSR", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
 			desc.numBytes = 3;
 			break;
+		case 0x21:
+			formatIndirectXInstruction(stringStream, "AND", addressBus.readByte(pc + 1));
+			desc.numBytes = 2;
+			break;
 		case 0x24:
 			formatZPageInstruction(stringStream, "BIT", addressBus.readByte(pc+1));
 			desc.numBytes = 2;
@@ -430,11 +434,24 @@ void m6502::pushByte(std::uint8_t val)
 	regSP -= 1;
 }
 
+void m6502::pushShort(std::uint16_t val)
+{
+	pushByte((val >> 8) & 0xFF);
+	pushByte(val & 0xFF);
+}
+
 std::uint8_t m6502::popByte()
 {
 	regSP += 1;
 	std::uint16_t addr = regSP + 0x100;
 	return addressBus.readByte(addr);
+}
+
+void m6502::doAND(std::uint8_t val)
+{
+	regA &= val;
+	zFlag = regA == 0;
+	nFlag = regA >= 0x80;
 }
 
 void m6502::doORA(std::uint8_t val)
@@ -541,23 +558,63 @@ void m6502::step()
 			}
 			break;
 		case 0x10:
-			//formatRelativeInstruction(stringStream, "BPL", addressBus.readByte(pc+1), pc);
-			//desc.numBytes = 2;
+			// BPL
+			{
+				std::int8_t offset = addressBus.readByte(regPC + 1);
+				regPC += 2;
+				cycleCount += 2;
+				if (nFlag) {
+					cycleCount += 1;
+					int oldPC = regPC;
+					regPC += offset;
+					if ((oldPC & 0xFF00) != (regPC & 0xFF00)) {
+						cycleCount += 1;
+					}
+				}
+			}
 			break;
 		case 0x18:
-			//stringStream << "CLC";
-			//break;
+			{
+				// CLC
+				cFlag = false;
+				regPC += 1;
+				cycleCount += 2;
+			}
+			break;
 		case 0x20:
-			//formatAbsoluteInstructionR(stringStream, "JSR", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				std::uint16_t retAddr = regPC + 2;
+				std::uint16_t targetAddr = (addressBus.readByte(regPC + 2) << 8) | addressBus.readByte(regPC + 1);
+				pushShort(retAddr);
+				regPC = targetAddr;
+				cycleCount += 6;
+			}
+			break;
+		case 0x21:
+			{
+				// AND ($nn,X)
+				doAND(readIndexedIndirect());
+				regPC += 2;
+				cycleCount += 6;
+			}
 			break;
 		case 0x24:
-			//formatZPageInstruction(stringStream, "BIT", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				// BIT $nn
+				std::uint8_t bitVal = readZeroPageValue();
+				zFlag = (bitVal & regA) == 0;
+				nFlag = (bitVal & 0x80) == 0x80;
+				vFlag = (bitVal & 0x40) == 0x40;
+				regPC += 2;
+				cycleCount += 3;
+			}
 			break;
 		case 0x25:
-			//formatZPageInstruction(stringStream, "AND", addressBus.readByte(pc + 1));
-			//desc.numBytes = 2;
+			{
+				doAND(readZeroPageValue());
+				regPC += 2;
+				cycleCount += 3;
+			}
 			break;
 		case 0x26:
 			//formatZPageInstruction(stringStream, "ROL", addressBus.readByte(pc+1));
@@ -579,15 +636,24 @@ void m6502::step()
 			}
 			break;
 		case 0x29:
-			//formatImmediateInstruction(stringStream, "AND", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			// AND #nn
+			{
+				doAND(addressBus.readByte(regPC + 1));
+				regPC += 2;
+				cycleCount += 2;
+			}
 			break;
 		case 0x30:
 			//formatRelativeInstruction(stringStream, "BMI", addressBus.readByte(pc+1), pc);
 			//desc.numBytes = 2;
 			break;
 		case 0x38:
-			//stringStream << "SEC";
+			{
+				// SEC
+				cFlag = true;
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0x40:
 			//stringStream << "RTI";

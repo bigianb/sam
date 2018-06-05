@@ -86,6 +86,87 @@ BOOST_AUTO_TEST_CASE(test_asl_instructions)
 	BOOST_CHECK_EQUAL(cpu.cycleCount, 6);
 }
 
+BOOST_AUTO_TEST_CASE(test_and_instructions)
+{
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	ram.bytes[0x0123] = 0x21;		// AND ($nn,X)
+	ram.bytes[0x0124] = 0x10;
+
+	auto desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "AND ($10, X)");
+
+	ram.bytes[0x11] = 0x13;
+
+	cpu.cycleCount = 0;
+	cpu.regA = 0x33;
+	cpu.regX = 1;
+	cpu.regPC = 0x0123;
+	cpu.nFlag = true;
+	cpu.zFlag = true;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regA, 0x13);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 6);
+	BOOST_CHECK(!cpu.nFlag);
+	BOOST_CHECK(!cpu.zFlag);
+
+	// result is negative
+	cpu.regPC = 0x0123;
+	cpu.regA = 0x80;
+	ram.bytes[0x11] = 0x83;
+	cpu.nFlag = false;
+	cpu.zFlag = true;
+	cpu.step();
+	BOOST_CHECK(cpu.nFlag);
+	BOOST_CHECK(!cpu.zFlag);
+
+	// result is zero
+	cpu.regPC = 0x0123;
+	cpu.regA = 0xFF;
+	ram.bytes[0x11] = 0x0;
+	cpu.nFlag = false;
+	cpu.zFlag = true;
+	cpu.step();
+	BOOST_CHECK(!cpu.nFlag);
+	BOOST_CHECK(cpu.zFlag);
+
+	// Zero page variant. Flag setting is common, so just test the value.
+	ram.bytes[0x0123] = 0x25;		// AND $nn
+	desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "AND $10");
+
+	cpu.regPC = 0x0123;
+	cpu.regA = 0x21;
+	ram.bytes[0x10] = 0x22;
+	cpu.cycleCount = 0;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regA, 0x20);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 3);
+
+	// immediate page variant. Flag setting is common, so just test the value.
+	ram.bytes[0x0123] = 0x29;		// AND #nn
+	ram.bytes[0x0124] = 0x44;
+	desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "AND #44");
+
+	cpu.regPC = 0x0123;
+	cpu.regA = 0x51;
+	ram.bytes[0x10] = 0x22;
+	cpu.cycleCount = 0;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regA, 0x40);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 2);
+	
+}
 
 BOOST_AUTO_TEST_CASE(test_or_instructions)
 {
@@ -357,4 +438,140 @@ BOOST_AUTO_TEST_CASE(test_plp_instructions)
 	ram.bytes[0x1F1] = 0x00;
 	cpu.step();
 	BOOST_CHECK_EQUAL(ram.bytes[0x1F1], 0xFE);
+}
+
+BOOST_AUTO_TEST_CASE(test_clc_instructions)
+{
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	ram.bytes[0x0123] = 0x18;		// CLC
+
+	auto desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "CLC");
+
+	cpu.cycleCount = 0;
+	cpu.regPC = 0x0123;
+	cpu.cFlag = true;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x0124);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 2);
+	BOOST_CHECK_EQUAL(cpu.cFlag, false);
+}
+
+BOOST_AUTO_TEST_CASE(test_sec_instructions)
+{
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	ram.bytes[0x0123] = 0x38;		// SEC
+
+	auto desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "SEC");
+
+	cpu.cycleCount = 0;
+	cpu.regPC = 0x0123;
+	cpu.cFlag = false;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x0124);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 2);
+	BOOST_CHECK_EQUAL(cpu.cFlag, true);
+}
+
+BOOST_AUTO_TEST_CASE(test_jsr_instructions)
+{
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	ram.bytes[0x0123] = 0x20;		// JSR $0201
+	ram.bytes[0x0124] = 0x01;
+	ram.bytes[0x0125] = 0x02;
+
+	auto desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "JSR $0201");
+
+	cpu.cycleCount = 0;
+	cpu.regSP = 0xF0;
+	cpu.regPC = 0x0123;
+
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x0201);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 6);
+	BOOST_CHECK_EQUAL(ram.bytes[0x1F0], 0x01);
+	BOOST_CHECK_EQUAL(ram.bytes[0x1EF], 0x25);
+}
+
+BOOST_AUTO_TEST_CASE(test_bit_instructions)
+{
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	ram.bytes[0x0123] = 0x24;		// BIT $nn
+	ram.bytes[0x0124] = 0x10;
+
+	auto desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "BIT $10");
+
+	ram.bytes[0x10] = 0xC3;
+
+	cpu.cycleCount = 0;
+	cpu.regA = 0x11;
+	cpu.regPC = 0x0123;
+	cpu.nFlag = false;
+	cpu.zFlag = true;
+	cpu.vFlag = false;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x0125);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 3);
+	BOOST_CHECK(cpu.nFlag);
+	BOOST_CHECK(!cpu.zFlag);
+	BOOST_CHECK(cpu.vFlag);
+
+	ram.bytes[0x10] = 0x43;
+	cpu.cycleCount = 0;
+	cpu.regA = 0x10;
+	cpu.regPC = 0x0123;
+	cpu.nFlag = true;
+	cpu.zFlag = false;
+	cpu.vFlag = false;
+	cpu.step();
+	BOOST_CHECK(!cpu.nFlag);
+	BOOST_CHECK(cpu.zFlag);
+	BOOST_CHECK(cpu.vFlag);
+
+	ram.bytes[0x10] = 0x23;
+	cpu.cycleCount = 0;
+	cpu.regA = 0x10;
+	cpu.regPC = 0x0123;
+	cpu.nFlag = true;
+	cpu.zFlag = false;
+	cpu.vFlag = true;
+	cpu.step();
+	BOOST_CHECK(!cpu.nFlag);
+	BOOST_CHECK(cpu.zFlag);
+	BOOST_CHECK(!cpu.vFlag);
 }

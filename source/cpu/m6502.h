@@ -42,9 +42,11 @@ private:
 	std::uint8_t readIndexedIndirect();
 	std::uint8_t readZeroPageValue();
 	void doORA(std::uint8_t val);
+	void doAND(std::uint8_t val);
 	std::uint8_t doASL(std::uint8_t val);
 	void pushByte(std::uint8_t val);
 	std::uint8_t popByte();
+	void pushShort(std::uint16_t val);
 
 private:
 	AddressBus & addressBus;
