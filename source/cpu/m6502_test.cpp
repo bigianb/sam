@@ -86,6 +86,56 @@ BOOST_AUTO_TEST_CASE(test_asl_instructions)
 	BOOST_CHECK_EQUAL(cpu.cycleCount, 6);
 }
 
+BOOST_AUTO_TEST_CASE(test_rol_instructions)
+{
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	ram.bytes[0x0123] = 0x26;		// ROL $nn
+	ram.bytes[0x0124] = 0x10;
+
+	auto desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "ROL $10");
+
+	ram.bytes[0x10] = 0xC3;
+	cpu.cycleCount = 0;
+	cpu.regA = 0x11;
+	cpu.regPC = 0x0123;
+	cpu.nFlag = false;
+	cpu.zFlag = true;
+	cpu.cFlag = true;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regA, 0x11);
+	BOOST_CHECK_EQUAL(ram.bytes[0x10], 0x87);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 5);
+	BOOST_CHECK(cpu.nFlag);
+	BOOST_CHECK(!cpu.zFlag);
+	BOOST_CHECK(cpu.cFlag);
+
+	ram.bytes[0x10] = 0xC3;
+	cpu.cycleCount = 0;
+	cpu.regA = 0x11;
+	cpu.regPC = 0x0123;
+	cpu.nFlag = false;
+	cpu.zFlag = true;
+	cpu.cFlag = false;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regA, 0x11);
+	BOOST_CHECK_EQUAL(ram.bytes[0x10], 0x86);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 5);
+	BOOST_CHECK(cpu.nFlag);
+	BOOST_CHECK(!cpu.zFlag);
+	BOOST_CHECK(cpu.cFlag);
+}
+
 BOOST_AUTO_TEST_CASE(test_and_instructions)
 {
 	Ram ram(64 * 1024);
@@ -574,4 +624,66 @@ BOOST_AUTO_TEST_CASE(test_bit_instructions)
 	BOOST_CHECK(!cpu.nFlag);
 	BOOST_CHECK(cpu.zFlag);
 	BOOST_CHECK(!cpu.vFlag);
+}
+
+BOOST_AUTO_TEST_CASE(test_branch_instructions)
+{
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	ram.bytes[0x0123] = 0x10;		// BPL #FC
+	ram.bytes[0x0124] = 0xFC;
+
+	auto desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "BPL *-4   -> 0x121");
+
+	cpu.cycleCount = 0;
+	cpu.regPC = 0x0123;
+	cpu.nFlag = true;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x125);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 2);
+
+	cpu.cycleCount = 0;
+	cpu.regPC = 0x0123;
+	cpu.nFlag = false;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x121);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 3);
+
+	cpu.cycleCount = 0;
+	cpu.regPC = 0x0123;
+	ram.bytes[0x0124] = -0x30;
+	cpu.nFlag = false;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x0F5);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 4);
+
+	ram.bytes[0x0123] = 0x30;		// BMI #FC
+	ram.bytes[0x0124] = 0xFC;
+
+	desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "BMI *-4   -> 0x121");
+
+	cpu.cycleCount = 0;
+	cpu.regPC = 0x0123;
+	cpu.nFlag = false;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x125);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 2);
+
+	cpu.cycleCount = 0;
+	cpu.regPC = 0x0123;
+	cpu.nFlag = true;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x121);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 3);
 }

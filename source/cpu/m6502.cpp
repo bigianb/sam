@@ -470,6 +470,34 @@ std::uint8_t m6502::doASL(std::uint8_t val)
 	return outval;
 }
 
+std::uint8_t m6502::doROL(std::uint8_t val)
+{
+	std::uint8_t outval = val << 1;
+	if (cFlag) {
+		outval |= 0x01;
+	}
+	zFlag = outval == 0;
+	nFlag = outval >= 0x80;
+	cFlag = val >= 0x80;
+	return outval;
+}
+
+void m6502::doBranch(bool predicate, std::int8_t offset)
+{
+	regPC += 2;
+	cycleCount += 2;
+	if (predicate) {
+		int targetAddr = regPC + offset;
+		if ((targetAddr & 0xFF00) != (regPC & 0xFF00)) {
+			cycleCount += 2;
+		}
+		else {
+			cycleCount += 1;
+		}
+		regPC = targetAddr;
+	}
+}
+
 void m6502::step()
 {
 	int opcode = addressBus.readByte(regPC);
@@ -558,19 +586,9 @@ void m6502::step()
 			}
 			break;
 		case 0x10:
-			// BPL
+			// BPL $nn
 			{
-				std::int8_t offset = addressBus.readByte(regPC + 1);
-				regPC += 2;
-				cycleCount += 2;
-				if (nFlag) {
-					cycleCount += 1;
-					int oldPC = regPC;
-					regPC += offset;
-					if ((oldPC & 0xFF00) != (regPC & 0xFF00)) {
-						cycleCount += 1;
-					}
-				}
+				doBranch(!nFlag, addressBus.readByte(regPC + 1));
 			}
 			break;
 		case 0x18:
@@ -617,8 +635,14 @@ void m6502::step()
 			}
 			break;
 		case 0x26:
-			//formatZPageInstruction(stringStream, "ROL", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				// ROL $nn
+				std::uint8_t zPageAddr = addressBus.readByte(regPC + 1);
+				std::uint8_t newVal = doROL(addressBus.readByte(zPageAddr));
+				addressBus.writeByte(zPageAddr, newVal);
+				regPC += 2;
+				cycleCount += 5;
+			}
 			break;
 		case 0x28:
 			{
@@ -644,8 +668,10 @@ void m6502::step()
 			}
 			break;
 		case 0x30:
-			//formatRelativeInstruction(stringStream, "BMI", addressBus.readByte(pc+1), pc);
-			//desc.numBytes = 2;
+			// BMI $nn
+			{
+				doBranch(nFlag, addressBus.readByte(regPC + 1));
+			}
 			break;
 		case 0x38:
 			{
