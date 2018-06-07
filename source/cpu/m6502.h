@@ -45,6 +45,7 @@ private:
 	void doAND(std::uint8_t val);
 	std::uint8_t doROL(std::uint8_t val);
 	std::uint8_t doASL(std::uint8_t val);
+	std::uint8_t doLSR(std::uint8_t val);
 	void pushByte(std::uint8_t val);
 	std::uint8_t popByte();
 	void pushShort(std::uint16_t val);

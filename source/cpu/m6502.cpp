@@ -470,6 +470,15 @@ std::uint8_t m6502::doASL(std::uint8_t val)
 	return outval;
 }
 
+std::uint8_t m6502::doLSR(std::uint8_t val)
+{
+	std::uint8_t outval = val >> 1;
+	zFlag = outval == 0;
+	nFlag = false;
+	cFlag = (val & 0x01) == 0x01;
+	return outval;
+}
+
 std::uint8_t m6502::doROL(std::uint8_t val)
 {
 	std::uint8_t outval = val << 1;
@@ -685,8 +694,14 @@ void m6502::step()
 			//stringStream << "RTI";
 			break;
 		case 0x46:
-			//formatZPageInstruction(stringStream, "LSR", addressBus.readByte(pc + 1));
-			//desc.numBytes = 2;
+			{
+				// LSR $nn
+				std::uint8_t zPageAddr = addressBus.readByte(regPC + 1);
+				std::uint8_t newVal = doLSR(addressBus.readByte(zPageAddr));
+				addressBus.writeByte(zPageAddr, newVal);
+				regPC += 2;
+				cycleCount += 5;
+			}
 			break;
 		case 0x48:
 			//stringStream << "PHA";
