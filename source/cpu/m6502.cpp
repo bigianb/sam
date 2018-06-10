@@ -166,6 +166,14 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc, DebugInfo& debugInfo)
 		case 0x40:
 			stringStream << "RTI";
 			break;
+		case 0x41:
+			formatIndirectXInstruction(stringStream, "EOR", addressBus.readByte(pc + 1));
+			desc.numBytes = 2;
+			break;
+		case 0x45:
+			formatZPageInstruction(stringStream, "EOR", addressBus.readByte(pc + 1));
+			desc.numBytes = 2;
+			break;
 		case 0x46:
 			formatZPageInstruction(stringStream, "LSR", addressBus.readByte(pc + 1));
 			desc.numBytes = 2;
@@ -461,6 +469,13 @@ void m6502::doORA(std::uint8_t val)
 	nFlag = regA >= 0x80;
 }
 
+void m6502::doEOR(std::uint8_t val)
+{
+	regA ^= val;
+	zFlag = regA == 0;
+	nFlag = regA >= 0x80;
+}
+
 std::uint8_t m6502::doASL(std::uint8_t val)
 {
 	std::uint8_t outval = val << 1;
@@ -693,6 +708,22 @@ void m6502::step()
 		case 0x40:
 			//stringStream << "RTI";
 			break;
+		case 0x41:
+			// EOR ($nn,X)
+			{
+				doEOR(readIndexedIndirect());
+				regPC += 2;
+				cycleCount += 6;
+			}
+			break;
+		case 0x45:
+			// EOR $nn
+			{
+				doEOR(readZeroPageValue());
+				regPC += 2;
+				cycleCount += 3;
+			}
+			break;
 		case 0x46:
 			{
 				// LSR $nn
@@ -704,11 +735,20 @@ void m6502::step()
 			}
 			break;
 		case 0x48:
-			//stringStream << "PHA";
+			{
+				// PHA
+				pushByte(regA);
+				regPC += 1;
+				cycleCount += 3;
+			}
 			break;
 		case 0x49:
-			//formatImmediateInstruction(stringStream, "EOR", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			// EOR #nn
+			{
+				doEOR(addressBus.readByte(regPC + 1));
+				regPC += 2;
+				cycleCount += 2;
+			}
 			break;
 		case 0x4A:
 			//stringStream << "LSR A";
