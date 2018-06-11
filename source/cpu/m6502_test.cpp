@@ -120,6 +120,19 @@ BOOST_AUTO_TEST_CASE(test_lsr_instructions)
 	BOOST_CHECK(!cpu.nFlag);
 	BOOST_CHECK(!cpu.zFlag);
 	BOOST_CHECK(cpu.cFlag);
+
+	ram.bytes[0x0123] = 0x4A;		// LSR A
+
+	desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "LSR A");
+
+	cpu.cycleCount = 0;
+	cpu.regA = 0x11;
+	cpu.regPC = 0x0123;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regA, 0x08);
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x0124);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 2);
 }
 
 BOOST_AUTO_TEST_CASE(test_rol_instructions)
@@ -414,6 +427,21 @@ BOOST_AUTO_TEST_CASE(test_eor_instructions)
 	cpu.step();
 	BOOST_CHECK_EQUAL(cpu.regA, 0x05);
 	BOOST_CHECK_EQUAL(cpu.cycleCount, 2);
+
+	ram.bytes[0x0123] = 0x5D;		// EOR nnnn, X
+	ram.bytes[0x0124] = 0x02;
+	ram.bytes[0x0125] = 0x01;
+	desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "EOR $0102, X");
+
+	cpu.regPC = 0x0123;
+	cpu.regX = 0x05;
+	cpu.regA = 0x41;
+	ram.bytes[0x0107] = 0x22;
+	cpu.cycleCount = 0;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regA, 0x63);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 4);
 }
 
 BOOST_AUTO_TEST_CASE(test_pha_instructions)
@@ -712,6 +740,36 @@ BOOST_AUTO_TEST_CASE(test_jsr_instructions)
 	BOOST_CHECK_EQUAL(ram.bytes[0x1EF], 0x25);
 }
 
+BOOST_AUTO_TEST_CASE(test_jmp_instructions)
+{
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	ram.bytes[0x0123] = 0x4C;		// JMP $0201
+	ram.bytes[0x0124] = 0x01;
+	ram.bytes[0x0125] = 0x02;
+
+	auto desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "JMP $0201");
+
+	cpu.cycleCount = 0;
+	cpu.regSP = 0xF0;
+	cpu.regPC = 0x0123;
+
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x0201);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 3);
+	BOOST_CHECK_EQUAL(cpu.regSP, 0xF0);
+}
+
 BOOST_AUTO_TEST_CASE(test_bit_instructions)
 {
 	Ram ram(64 * 1024);
@@ -828,6 +886,26 @@ BOOST_AUTO_TEST_CASE(test_branch_instructions)
 	cpu.cycleCount = 0;
 	cpu.regPC = 0x0123;
 	cpu.nFlag = true;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x121);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 3);
+
+	ram.bytes[0x0123] = 0x50;		// BVC #FC
+	ram.bytes[0x0124] = 0xFC;
+
+	desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "BVC *-4   -> 0x121");
+
+	cpu.cycleCount = 0;
+	cpu.regPC = 0x0123;
+	cpu.vFlag = true;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x125);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 2);
+
+	cpu.cycleCount = 0;
+	cpu.regPC = 0x0123;
+	cpu.vFlag = false;
 	cpu.step();
 	BOOST_CHECK_EQUAL(cpu.regPC, 0x121);
 	BOOST_CHECK_EQUAL(cpu.cycleCount, 3);

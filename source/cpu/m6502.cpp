@@ -428,6 +428,18 @@ std::uint8_t m6502::readIndexedIndirect()
 	return addressBus.readByte(zPageAddr);
 }
 
+std::uint8_t m6502::readAbsoluteX()
+{
+	// e.g. OPCODE $nn, X
+	std::uint16_t addr = addressBus.readByte(regPC + 1) + (addressBus.readByte(regPC + 2) << 8);
+	std::uint16_t readAddr = addr + regX;
+	if ((addr >> 8) != (readAddr >> 8)) {
+		// pay the penalty for carry addition
+		cycleCount += 1;
+	}
+	return addressBus.readByte(readAddr);
+}
+
 std::uint8_t m6502::readZeroPageValue()
 {
 	// e.g. OPCODE $nn
@@ -625,6 +637,7 @@ void m6502::step()
 			break;
 		case 0x20:
 			{
+				// JSR
 				std::uint16_t retAddr = regPC + 2;
 				std::uint16_t targetAddr = (addressBus.readByte(regPC + 2) << 8) | addressBus.readByte(regPC + 1);
 				pushShort(retAddr);
@@ -751,22 +764,38 @@ void m6502::step()
 			}
 			break;
 		case 0x4A:
-			//stringStream << "LSR A";
+			{
+				// LSR A
+				regA = doLSR(regA);
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0x4c:
-			//formatAbsoluteInstructionR(stringStream, "JMP", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				// JMP nnnn
+				std::uint16_t targetAddr = (addressBus.readByte(regPC + 2) << 8) | addressBus.readByte(regPC + 1);
+				regPC = targetAddr;
+				cycleCount += 3;
+			}
 			break;
 		case 0x50:
-			//formatRelativeInstruction(stringStream, "BVC", addressBus.readByte(pc+1), pc);
-			//desc.numBytes = 2;
+			// BVC $nn
+			{
+				doBranch(!vFlag, addressBus.readByte(regPC + 1));
+			}
 			break;
 		case 0x58:
 			//stringStream << "CLI";
 			break;
 		case 0x5d:
-			//formatAbsoluteXInstructionR(stringStream, "EOR", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				// EOR nn, X
+				std::uint8_t val = readAbsoluteX();
+				doEOR(val);
+				cycleCount += 4;
+				regPC += 3;
+			}
 			break;
 		case 0x60:
 			//stringStream << "RTS";
