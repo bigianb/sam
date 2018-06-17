@@ -709,7 +709,7 @@ BOOST_AUTO_TEST_CASE(test_sec_instructions)
 	BOOST_CHECK_EQUAL(cpu.cFlag, true);
 }
 
-BOOST_AUTO_TEST_CASE(test_jsr_instructions)
+BOOST_AUTO_TEST_CASE(test_jsr_rts_instructions)
 {
 	Ram ram(64 * 1024);
 	DirectAddressBus bus(ram);
@@ -738,6 +738,12 @@ BOOST_AUTO_TEST_CASE(test_jsr_instructions)
 	BOOST_CHECK_EQUAL(cpu.cycleCount, 6);
 	BOOST_CHECK_EQUAL(ram.bytes[0x1F0], 0x01);
 	BOOST_CHECK_EQUAL(ram.bytes[0x1EF], 0x25);
+
+	ram.bytes[0x0201] = 0x60;
+	desc = cpu.disassemble(cpu.regPC, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "RTS");
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x0126);
 }
 
 BOOST_AUTO_TEST_CASE(test_jmp_instructions)

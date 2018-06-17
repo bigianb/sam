@@ -467,6 +467,13 @@ std::uint8_t m6502::popByte()
 	return addressBus.readByte(addr);
 }
 
+std::uint16_t m6502::popShort()
+{
+	std::uint16_t loByte = popByte();
+	std::uint8_t hiByte = popByte();
+	return (hiByte << 8) | loByte;
+}
+
 void m6502::doAND(std::uint8_t val)
 {
 	regA &= val;
@@ -486,6 +493,34 @@ void m6502::doEOR(std::uint8_t val)
 	regA ^= val;
 	zFlag = regA == 0;
 	nFlag = regA >= 0x80;
+}
+
+void m6502::doADC(std::uint8_t val)
+{
+	if (decimalMode) {
+		// TODO: decimal mode
+	}
+	else {
+		std::uint8_t originalRegA = regA;
+		std::uint16_t result = regA + val + cFlag;
+		cFlag = result > 0xFF;
+		regA = result & 0xFF;
+		bool val1Negative = val > 0x7f;
+		bool val2Negative = regA > 0x7F;
+		bool resultNegative = regA > 0x7F;
+		if (val1Negative && val2Negative && !resultNegative) {
+			// adding 2 negatives should not give a positive
+			vFlag = true;
+		}
+		else if (!val1Negative && !val2Negative && resultNegative) {
+			// adding 2 positives should not give a negative
+			vFlag = true;
+		}
+		else {
+			vFlag = false;
+		}
+	}
+	zFlag = regA == 0;
 }
 
 std::uint8_t m6502::doASL(std::uint8_t val)
@@ -798,11 +833,19 @@ void m6502::step()
 			}
 			break;
 		case 0x60:
-			//stringStream << "RTS";
+			{
+				// RTS
+				regPC = popShort() + 1;
+				cycleCount += 6;
+			}
 			break;
 		case 0x65:
-			//formatZPageInstruction(stringStream, "ADC", addressBus.readByte(pc + 1));
-			//desc.numBytes = 2;
+			// ADC $nn
+			{
+				doADC(readZeroPageValue());
+				regPC += 2;
+				cycleCount += 3;
+			}
 			break;
 		case 0x68:
 			//stringStream << "PLA";
