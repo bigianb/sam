@@ -48,6 +48,7 @@ BOOST_AUTO_TEST_CASE(test_adc_instructions)
 	cpu.zFlag = true;
 	cpu.cFlag = true;
 	cpu.decimalMode = false;
+	cpu.step();
 
 	BOOST_CHECK_EQUAL(cpu.regA, 0x11 + 0x15 + 0x01);
 	BOOST_CHECK_EQUAL(cpu.cycleCount, 3);
@@ -63,6 +64,7 @@ BOOST_AUTO_TEST_CASE(test_adc_instructions)
 	cpu.zFlag = true;
 	cpu.cFlag = false;
 	cpu.decimalMode = false;
+	cpu.step();
 
 	BOOST_CHECK_EQUAL(cpu.regA, 0x80);
 	BOOST_CHECK(cpu.vFlag);
@@ -77,11 +79,12 @@ BOOST_AUTO_TEST_CASE(test_adc_instructions)
 	cpu.zFlag = true;
 	cpu.cFlag = false;
 	cpu.decimalMode = false;
+	cpu.step();
 
 	BOOST_CHECK_EQUAL(cpu.regA, 0x00);
-	BOOST_CHECK(cpu.vFlag);
+	BOOST_CHECK(!cpu.vFlag);
 	BOOST_CHECK(cpu.zFlag);
-	BOOST_CHECK(!cpu.cFlag);
+	BOOST_CHECK(cpu.cFlag);
 }
 
 BOOST_AUTO_TEST_CASE(test_asl_instructions)

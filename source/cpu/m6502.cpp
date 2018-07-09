@@ -506,7 +506,7 @@ void m6502::doADC(std::uint8_t val)
 		cFlag = result > 0xFF;
 		regA = result & 0xFF;
 		bool val1Negative = val > 0x7f;
-		bool val2Negative = regA > 0x7F;
+		bool val2Negative = originalRegA > 0x7F;
 		bool resultNegative = regA > 0x7F;
 		if (val1Negative && val2Negative && !resultNegative) {
 			// adding 2 negatives should not give a positive
