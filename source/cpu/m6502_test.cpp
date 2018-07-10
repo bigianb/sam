@@ -19,6 +19,54 @@ BOOST_AUTO_TEST_CASE(test_reset)
     BOOST_CHECK_EQUAL(cpu.regPC, 0x0123);
 }
 
+struct ZeroPageTestCase
+{
+	std::string flagsIn;
+	std::uint8_t opcode;
+	std::uint8_t zpageValue;
+	int regA;
+	std::string expectedDesc;
+	int expectedCycles;
+	int expectedRegA;
+	std::string expectedFlags;
+
+	ZeroPageTestCase(
+		std::string flagsIn_in,
+		std::uint8_t opcode_in,
+		std::uint8_t zpageValue_in,
+		int regA_in,
+		std::string expectedDesc_in,
+		int expectedCycles_in,
+		int expectedRegA_in,
+		std::string expectedFlags_in):	flagsIn(flagsIn_in), opcode(opcode_in), zpageValue(zpageValue_in),
+										regA(regA_in), expectedDesc(expectedDesc_in), expectedCycles(expectedCycles_in),
+										expectedRegA(expectedRegA_in), expectedFlags(expectedFlags_in)
+		{}
+};
+
+BOOST_AUTO_TEST_CASE(test_zpage_instructions)
+{
+	ZeroPageTestCase zeroPageTests[] {ZeroPageTestCase("c---z", 0x65, 0x15, 0x11, "ADC $10", 3, 0x11 + 0x15 + 0x01, "-----")};
+
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	for (const auto& testcase : zeroPageTests){
+		ram.bytes[0x0123] = testcase.opcode;
+		ram.bytes[0x0124] = 0x10;
+
+		const auto desc = cpu.disassemble(0x123, debugInfo);
+		BOOST_CHECK_EQUAL(desc.line, testcase.expectedDesc);
+	}
+}
 
 BOOST_AUTO_TEST_CASE(test_adc_instructions)
 {
