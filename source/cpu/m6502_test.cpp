@@ -38,10 +38,11 @@ struct ZeroPageTestCase
 		std::string expectedDesc_in,
 		int expectedCycles_in,
 		int expectedRegA_in,
-		std::string expectedFlags_in):	flagsIn(flagsIn_in), opcode(opcode_in), zpageValue(zpageValue_in),
+		std::string expectedFlags_in) : flagsIn(flagsIn_in), opcode(opcode_in), zpageValue(zpageValue_in),
 										regA(regA_in), expectedDesc(expectedDesc_in), expectedCycles(expectedCycles_in),
 										expectedRegA(expectedRegA_in), expectedFlags(expectedFlags_in)
-		{}
+	{
+	}
 };
 
 BOOST_AUTO_TEST_CASE(test_zpage_instructions)
@@ -65,6 +66,26 @@ BOOST_AUTO_TEST_CASE(test_zpage_instructions)
 
 		const auto desc = cpu.disassemble(0x123, debugInfo);
 		BOOST_CHECK_EQUAL(desc.line, testcase.expectedDesc);
+
+		ram.bytes[0x10] = testcase.zpageValue;
+
+		cpu.cycleCount = 0;
+		cpu.regA = testcase.regA;
+		cpu.regPC = 0x0123;
+		cpu.cFlag = testcase.flagsIn.find('c') != std::string::npos;
+		cpu.decimalMode = testcase.flagsIn.find('d') != std::string::npos;
+		cpu.nFlag = testcase.flagsIn.find('n') != std::string::npos;
+		cpu.vFlag = testcase.flagsIn.find('v') != std::string::npos;
+		cpu.zFlag = testcase.flagsIn.find('z') != std::string::npos;
+		cpu.step();
+
+		BOOST_CHECK_EQUAL(cpu.regA, testcase.expectedRegA);
+		BOOST_CHECK_EQUAL(cpu.cycleCount, testcase.expectedCycles);
+		BOOST_CHECK_EQUAL(cpu.cFlag, testcase.expectedFlags.find('c') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.decimalMode, testcase.expectedFlags.find('d') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.nFlag, testcase.expectedFlags.find('n') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.vFlag, testcase.expectedFlags.find('v') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.zFlag, testcase.expectedFlags.find('z') != std::string::npos);
 	}
 }
 
