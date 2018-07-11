@@ -47,7 +47,15 @@ struct ZeroPageTestCase
 
 BOOST_AUTO_TEST_CASE(test_zpage_instructions)
 {
-	ZeroPageTestCase zeroPageTests[] {ZeroPageTestCase("c---z", 0x65, 0x15, 0x11, "ADC $10", 3, 0x11 + 0x15 + 0x01, "-----")};
+	ZeroPageTestCase zeroPageTests[] {
+		//flags, opcode, zval, A, desc, cycles, AOut, flagsOut
+		ZeroPageTestCase("c---z", 0x65, 0x15, 0x11, "ADC $10", 3, 0x11 + 0x15 + 0x01, "-----"),
+		// two positives overflow to a negative
+		ZeroPageTestCase("----z", 0x65, 0x70, 0x10, "ADC $10", 3, 0x80, "---v-"),
+		// two negatives overflow to a positive
+		ZeroPageTestCase("----z", 0x65, 0x80, 0xE0, "ADC $10", 3, 0x60, "---v-"),
+		ZeroPageTestCase("----z", 0x65, 0x70, 0x90, "ADC $10", 3, 0x00, "----z")
+	};
 
 	Ram ram(64 * 1024);
 	DirectAddressBus bus(ram);
@@ -87,73 +95,6 @@ BOOST_AUTO_TEST_CASE(test_zpage_instructions)
 		BOOST_CHECK_EQUAL(cpu.vFlag, testcase.expectedFlags.find('v') != std::string::npos);
 		BOOST_CHECK_EQUAL(cpu.zFlag, testcase.expectedFlags.find('z') != std::string::npos);
 	}
-}
-
-BOOST_AUTO_TEST_CASE(test_adc_instructions)
-{
-	Ram ram(64 * 1024);
-	DirectAddressBus bus(ram);
-	DebugInfo debugInfo;
-
-	for (int i = 0; i < 0xFFFF; ++i) {
-		ram.bytes[i] = 0;
-	}
-
-	m6502 cpu(bus);
-	cpu.reset();
-
-	ram.bytes[0x0123] = 0x65;		// ADC $nn
-	ram.bytes[0x0124] = 0x10;
-
-	auto desc = cpu.disassemble(0x123, debugInfo);
-	BOOST_CHECK_EQUAL(desc.line, "ADC $10");
-
-	ram.bytes[0x10] = 0x15;
-
-	cpu.cycleCount = 0;
-	cpu.regA = 0x11;
-	cpu.regPC = 0x0123;
-	cpu.nFlag = false;
-	cpu.zFlag = true;
-	cpu.cFlag = true;
-	cpu.decimalMode = false;
-	cpu.step();
-
-	BOOST_CHECK_EQUAL(cpu.regA, 0x11 + 0x15 + 0x01);
-	BOOST_CHECK_EQUAL(cpu.cycleCount, 3);
-	BOOST_CHECK(!cpu.vFlag);
-	BOOST_CHECK(!cpu.zFlag);
-	BOOST_CHECK(!cpu.cFlag);
-
-	ram.bytes[0x10] = 0x70;
-
-	cpu.regA = 0x10;
-	cpu.regPC = 0x0123;
-	cpu.nFlag = false;
-	cpu.zFlag = true;
-	cpu.cFlag = false;
-	cpu.decimalMode = false;
-	cpu.step();
-
-	BOOST_CHECK_EQUAL(cpu.regA, 0x80);
-	BOOST_CHECK(cpu.vFlag);
-	BOOST_CHECK(!cpu.zFlag);
-	BOOST_CHECK(!cpu.cFlag);
-
-	ram.bytes[0x10] = 0x70;
-
-	cpu.regA = 0x90;
-	cpu.regPC = 0x0123;
-	cpu.nFlag = false;
-	cpu.zFlag = true;
-	cpu.cFlag = false;
-	cpu.decimalMode = false;
-	cpu.step();
-
-	BOOST_CHECK_EQUAL(cpu.regA, 0x00);
-	BOOST_CHECK(!cpu.vFlag);
-	BOOST_CHECK(cpu.zFlag);
-	BOOST_CHECK(cpu.cFlag);
 }
 
 BOOST_AUTO_TEST_CASE(test_asl_instructions)
