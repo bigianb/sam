@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE(test_zpage_instructions)
 		// two positives overflow to a negative
 		ZeroPageTestCase("----z", 0x65, 0x70, 0x10, "ADC $10", 3, 0x80, "---v-"),
 		// two negatives overflow to a positive
-		ZeroPageTestCase("----z", 0x65, 0x80, 0xE0, "ADC $10", 3, 0x60, "---v-"),
-		ZeroPageTestCase("----z", 0x65, 0x70, 0x90, "ADC $10", 3, 0x00, "----z")
+		ZeroPageTestCase("----z", 0x65, 0x80, 0xE0, "ADC $10", 3, 0x60, "c--v-"),
+		ZeroPageTestCase("----z", 0x65, 0x70, 0x90, "ADC $10", 3, 0x00, "c---z")
 	};
 
 	Ram ram(64 * 1024);
