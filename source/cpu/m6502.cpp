@@ -497,30 +497,36 @@ void m6502::doEOR(std::uint8_t val)
 
 void m6502::doADC(std::uint8_t val)
 {
+	std::uint8_t originalRegA = regA;
+	std::uint16_t result = regA + val + cFlag;
 	if (decimalMode) {
-		// TODO: decimal mode
+		if ((result & 0x0f) > 9) {
+			// if A, result += 0x10, result -= 0x0A => result += 6
+			result += 6;
+		}
+		if ((result & 0xf0) > 0x90) {
+			result += 0x60;
+		}
+	}
+
+	cFlag = result > 0xFF;
+	regA = result & 0xFF;
+	bool val1Negative = val > 0x7f;
+	bool val2Negative = originalRegA > 0x7F;
+	bool resultNegative = regA > 0x7F;
+	if (val1Negative && val2Negative && !resultNegative) {
+		// adding 2 negatives should not give a positive
+		vFlag = true;
+	}
+	else if (!val1Negative && !val2Negative && resultNegative) {
+		// adding 2 positives should not give a negative
+		vFlag = true;
 	}
 	else {
-		std::uint8_t originalRegA = regA;
-		std::uint16_t result = regA + val + cFlag;
-		cFlag = result > 0xFF;
-		regA = result & 0xFF;
-		bool val1Negative = val > 0x7f;
-		bool val2Negative = originalRegA > 0x7F;
-		bool resultNegative = regA > 0x7F;
-		if (val1Negative && val2Negative && !resultNegative) {
-			// adding 2 negatives should not give a positive
-			vFlag = true;
-		}
-		else if (!val1Negative && !val2Negative && resultNegative) {
-			// adding 2 positives should not give a negative
-			vFlag = true;
-		}
-		else {
-			vFlag = false;
-		}
+		vFlag = false;
 	}
-	zFlag = regA == 0;
+	
+	zFlag = regA == 0;	
 }
 
 std::uint8_t m6502::doASL(std::uint8_t val)

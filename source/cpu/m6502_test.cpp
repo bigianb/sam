@@ -54,7 +54,12 @@ BOOST_AUTO_TEST_CASE(test_zpage_instructions)
 		ZeroPageTestCase("----z", 0x65, 0x70, 0x10, "ADC $10", 3, 0x80, "---v-"),
 		// two negatives overflow to a positive
 		ZeroPageTestCase("----z", 0x65, 0x80, 0xE0, "ADC $10", 3, 0x60, "c--v-"),
-		ZeroPageTestCase("----z", 0x65, 0x70, 0x90, "ADC $10", 3, 0x00, "c---z")
+		ZeroPageTestCase("----z", 0x65, 0x70, 0x90, "ADC $10", 3, 0x00, "c---z"),
+
+		// Decimal mode
+		ZeroPageTestCase("-d--z", 0x65, 0x16, 0x75, "ADC $10", 3, 0x91, "-d-v-"),
+		ZeroPageTestCase("-d--z", 0x65, 0x16, 0x85, "ADC $10", 3, 0x01, "cd---"),
+		ZeroPageTestCase("cd--z", 0x65, 0x16, 0x85, "ADC $10", 3, 0x02, "cd---")
 	};
 
 	Ram ram(64 * 1024);
