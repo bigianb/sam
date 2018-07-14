@@ -854,7 +854,14 @@ void m6502::step()
 			}
 			break;
 		case 0x68:
-			//stringStream << "PLA";
+			{
+				// PLA
+				regA = popByte();
+				zFlag = regA == 0;
+				nFlag = regA > 0x7F;
+				regPC += 1;
+				cycleCount += 4;
+			}
 			break;
 		case 0x69:
 			//formatImmediateInstruction(stringStream, "ADC", addressBus.readByte(pc + 1));

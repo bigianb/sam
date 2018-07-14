@@ -527,6 +527,49 @@ BOOST_AUTO_TEST_CASE(test_eor_instructions)
 	BOOST_CHECK_EQUAL(cpu.cycleCount, 4);
 }
 
+BOOST_AUTO_TEST_CASE(test_pla_instructions)
+{
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	ram.bytes[0x0123] = 0x68;		// PLA
+
+	auto desc = cpu.disassemble(0x123, debugInfo);
+	BOOST_CHECK_EQUAL(desc.line, "PLA");
+
+	cpu.cycleCount = 0;
+	cpu.regSP = 0xEF;
+	cpu.regPC = 0x0123;
+	cpu.regA = 0xAB;
+	cpu.zFlag = true;
+	cpu.nFlag = false;
+	ram.bytes[0x1F0] = 0xB3;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regA, 0xB3);
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x0124);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 4);
+	BOOST_CHECK(cpu.nFlag);
+	BOOST_CHECK(!cpu.zFlag);
+
+	cpu.cycleCount = 0;
+	cpu.regSP = 0xEF;
+	cpu.regPC = 0x0123;
+	cpu.regA = 0xAB;
+	cpu.zFlag = false;
+	cpu.nFlag = true;
+	ram.bytes[0x1F0] = 0x00;
+	cpu.step();
+	BOOST_CHECK_EQUAL(cpu.regA, 0x00);
+	BOOST_CHECK_EQUAL(cpu.regPC, 0x0124);
+	BOOST_CHECK_EQUAL(cpu.cycleCount, 4);
+	BOOST_CHECK(!cpu.nFlag);
+	BOOST_CHECK(cpu.zFlag);
+}
+
 BOOST_AUTO_TEST_CASE(test_pha_instructions)
 {
 	Ram ram(64 * 1024);
