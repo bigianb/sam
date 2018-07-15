@@ -19,26 +19,26 @@ BOOST_AUTO_TEST_CASE(test_reset)
     BOOST_CHECK_EQUAL(cpu.regPC, 0x0123);
 }
 
-struct ZeroPageTestCase
+struct M6502TestCase
 {
 	std::string flagsIn;
 	std::uint8_t opcode;
-	std::uint8_t zpageValue;
+	std::uint8_t value1;
 	int regA;
 	std::string expectedDesc;
 	int expectedCycles;
 	int expectedRegA;
 	std::string expectedFlags;
 
-	ZeroPageTestCase(
+	M6502TestCase(
 		std::string flagsIn_in,
 		std::uint8_t opcode_in,
-		std::uint8_t zpageValue_in,
+		std::uint8_t value1_in,
 		int regA_in,
 		std::string expectedDesc_in,
 		int expectedCycles_in,
 		int expectedRegA_in,
-		std::string expectedFlags_in) : flagsIn(flagsIn_in), opcode(opcode_in), zpageValue(zpageValue_in),
+		std::string expectedFlags_in) : flagsIn(flagsIn_in), opcode(opcode_in), value1(value1_in),
 										regA(regA_in), expectedDesc(expectedDesc_in), expectedCycles(expectedCycles_in),
 										expectedRegA(expectedRegA_in), expectedFlags(expectedFlags_in)
 	{
@@ -47,19 +47,19 @@ struct ZeroPageTestCase
 
 BOOST_AUTO_TEST_CASE(test_zpage_instructions)
 {
-	ZeroPageTestCase zeroPageTests[] {
+	M6502TestCase zeroPageTests[] {
 		//flags, opcode, zval, A, desc, cycles, AOut, flagsOut
-		ZeroPageTestCase("c---z", 0x65, 0x15, 0x11, "ADC $10", 3, 0x11 + 0x15 + 0x01, "-----"),
+		M6502TestCase("c---z", 0x65, 0x15, 0x11, "ADC $10", 3, 0x11 + 0x15 + 0x01, "-----"),
 		// two positives overflow to a negative
-		ZeroPageTestCase("----z", 0x65, 0x70, 0x10, "ADC $10", 3, 0x80, "---v-"),
+		M6502TestCase("----z", 0x65, 0x70, 0x10, "ADC $10", 3, 0x80, "---v-"),
 		// two negatives overflow to a positive
-		ZeroPageTestCase("----z", 0x65, 0x80, 0xE0, "ADC $10", 3, 0x60, "c--v-"),
-		ZeroPageTestCase("----z", 0x65, 0x70, 0x90, "ADC $10", 3, 0x00, "c---z"),
+		M6502TestCase("----z", 0x65, 0x80, 0xE0, "ADC $10", 3, 0x60, "c--v-"),
+		M6502TestCase("----z", 0x65, 0x70, 0x90, "ADC $10", 3, 0x00, "c---z"),
 
 		// Decimal mode
-		ZeroPageTestCase("-d--z", 0x65, 0x16, 0x75, "ADC $10", 3, 0x91, "-d-v-"),
-		ZeroPageTestCase("-d--z", 0x65, 0x16, 0x85, "ADC $10", 3, 0x01, "cd---"),
-		ZeroPageTestCase("cd--z", 0x65, 0x16, 0x85, "ADC $10", 3, 0x02, "cd---")
+		M6502TestCase("-d--z", 0x65, 0x16, 0x75, "ADC $10", 3, 0x91, "-d-v-"),
+		M6502TestCase("-d--z", 0x65, 0x16, 0x85, "ADC $10", 3, 0x01, "cd---"),
+		M6502TestCase("cd--z", 0x65, 0x16, 0x85, "ADC $10", 3, 0x02, "cd---")
 	};
 
 	Ram ram(64 * 1024);
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(test_zpage_instructions)
 		const auto desc = cpu.disassemble(0x123, debugInfo);
 		BOOST_CHECK_EQUAL(desc.line, testcase.expectedDesc);
 
-		ram.bytes[0x10] = testcase.zpageValue;
+		ram.bytes[0x10] = testcase.value1;
 
 		cpu.cycleCount = 0;
 		cpu.regA = testcase.regA;
@@ -93,6 +93,53 @@ BOOST_AUTO_TEST_CASE(test_zpage_instructions)
 		cpu.step();
 
 		BOOST_CHECK_EQUAL(cpu.regA, testcase.expectedRegA);
+		BOOST_CHECK_EQUAL(cpu.regPC, 0x125);
+		BOOST_CHECK_EQUAL(cpu.cycleCount, testcase.expectedCycles);
+		BOOST_CHECK_EQUAL(cpu.cFlag, testcase.expectedFlags.find('c') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.decimalMode, testcase.expectedFlags.find('d') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.nFlag, testcase.expectedFlags.find('n') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.vFlag, testcase.expectedFlags.find('v') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.zFlag, testcase.expectedFlags.find('z') != std::string::npos);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(test_imm_instructions)
+{
+	M6502TestCase tests[]{
+		//flags, opcode, immval, A, desc, cycles, AOut, flagsOut
+		M6502TestCase("c---z", 0x69, 0x15, 0x11, "ADC #15", 2, 0x11 + 0x15 + 0x01, "-----"),
+	};
+
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	for (const auto& testcase : tests) {
+		ram.bytes[0x0123] = testcase.opcode;
+		ram.bytes[0x0124] = testcase.value1;
+
+		const auto desc = cpu.disassemble(0x123, debugInfo);
+		BOOST_CHECK_EQUAL(desc.line, testcase.expectedDesc);
+
+		cpu.cycleCount = 0;
+		cpu.regA = testcase.regA;
+		cpu.regPC = 0x0123;
+		cpu.cFlag = testcase.flagsIn.find('c') != std::string::npos;
+		cpu.decimalMode = testcase.flagsIn.find('d') != std::string::npos;
+		cpu.nFlag = testcase.flagsIn.find('n') != std::string::npos;
+		cpu.vFlag = testcase.flagsIn.find('v') != std::string::npos;
+		cpu.zFlag = testcase.flagsIn.find('z') != std::string::npos;
+		cpu.step();
+
+		BOOST_CHECK_EQUAL(cpu.regA, testcase.expectedRegA);
+		BOOST_CHECK_EQUAL(cpu.regPC, 0x125);
 		BOOST_CHECK_EQUAL(cpu.cycleCount, testcase.expectedCycles);
 		BOOST_CHECK_EQUAL(cpu.cFlag, testcase.expectedFlags.find('c') != std::string::npos);
 		BOOST_CHECK_EQUAL(cpu.decimalMode, testcase.expectedFlags.find('d') != std::string::npos);

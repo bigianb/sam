@@ -864,8 +864,11 @@ void m6502::step()
 			}
 			break;
 		case 0x69:
-			//formatImmediateInstruction(stringStream, "ADC", addressBus.readByte(pc + 1));
-			//desc.numBytes = 2;
+			{
+				doADC(addressBus.readByte(regPC + 1));
+				regPC += 2;
+				cycleCount += 2;
+			}
 			break;
 		case 0x6A:
 			//stringStream << "ROR A";
