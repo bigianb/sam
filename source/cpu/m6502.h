@@ -47,6 +47,7 @@ private:
 	void doEOR(std::uint8_t val);
 	void doORA(std::uint8_t val);
 	std::uint8_t doROL(std::uint8_t val);
+	std::uint8_t doROR(std::uint8_t val);
 	std::uint8_t doASL(std::uint8_t val);
 	std::uint8_t doLSR(std::uint8_t val);
 

@@ -559,6 +559,18 @@ std::uint8_t m6502::doROL(std::uint8_t val)
 	return outval;
 }
 
+std::uint8_t m6502::doROR(std::uint8_t val)
+{
+	std::uint8_t outval = val >> 1;
+	if (cFlag) {
+		outval |= 0x80;
+	}
+	zFlag = outval == 0;
+	nFlag = outval >= 0x80;
+	cFlag = (val & 0x01) == 0x01;
+	return outval;
+}
+
 void m6502::doBranch(bool predicate, std::int8_t offset)
 {
 	regPC += 2;
@@ -871,7 +883,11 @@ void m6502::step()
 			}
 			break;
 		case 0x6A:
-			//stringStream << "ROR A";
+			{
+				regA = doROR(regA);
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0x78:
 			//stringStream << "SEI";
