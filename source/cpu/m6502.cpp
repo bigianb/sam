@@ -1063,14 +1063,24 @@ void m6502::step()
 			//desc.numBytes = 2;
 			break;
 		case 0xe8:
-			//stringStream << "INX";
+			{
+				regX += 1;
+				zFlag = regX == 0;
+				nFlag = regX >= 0x80;
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0xe9:
 			//formatImmediateInstruction(stringStream, "SBC", addressBus.readByte(pc+1));
 			//desc.numBytes = 2;
 			break;
 		case 0xea:
-			//stringStream << "NOP";
+			{
+				// NOP
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0xed:
 			//formatAbsoluteInstructionR(stringStream, "SBC", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
