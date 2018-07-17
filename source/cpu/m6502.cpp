@@ -893,8 +893,11 @@ void m6502::step()
 			//stringStream << "SEI";
 			break;
 		case 0x7d:
-			//formatAbsoluteXInstructionR(stringStream, "ADC", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				doADC(readAbsoluteX());
+				regPC += 3;
+				cycleCount += 4;
+			}
 			break;
 		case 0x81:
 			//formatIndirectXInstruction(stringStream, "STA", addressBus.readByte(pc+1));
@@ -1033,7 +1036,11 @@ void m6502::step()
 			//desc.numBytes = 2;
 			break;
 		case 0xd8:
-			//stringStream << "CLD";
+			{
+				decimalMode = false;
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0xd9:
 			//formatAbsoluteYInstructionR(stringStream, "CMP", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
@@ -1074,7 +1081,11 @@ void m6502::step()
 			//desc.numBytes = 2;
 			break;
 		case 0xf8:
-			//stringStream << "SED";
+			{
+				decimalMode = true;
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		default:
 			std::cerr << "unknown opcode: 0x" << std::setw(2) << std::setfill('0') << std::hex << opcode;
