@@ -334,6 +334,64 @@ BOOST_AUTO_TEST_CASE(test_reg_instructions)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(test_indexed_indirect_instructions)
+{
+	// Single opcode instructions
+	M6502TestCase tests[]{
+		// hijack hi to be memval_out
+		//            flags, opcode, lo,   mem_out, memval, A,    X,    Y,    desc,          cycles, AOut, XOut, YOut, flagsOut
+		M6502TestCase("c---z", 0x81, 0x10, 0x10,    0x00,   0x10, 0x02, 0x33, "STA ($10, X)", 6,    0x10,  0x02, 0x33, "c---z")
+	};
+
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+
+	for (const auto& testcase : tests) {
+		cpu.reset();
+		ram.bytes[0x0123] = testcase.opcode;
+		ram.bytes[0x0124] = testcase.value1;
+
+		int targetzPage = (testcase.regX + testcase.value1) & 0xFF;
+		ram.bytes[targetzPage] = 0x45;
+		ram.bytes[targetzPage+1] = 0x23;
+		ram.bytes[0x2345] = testcase.memval;
+
+		const auto desc = cpu.disassemble(0x123, debugInfo);
+		BOOST_CHECK_EQUAL(desc.line, testcase.expectedDesc);
+
+		cpu.cycleCount = 0;
+		cpu.regA = testcase.regA;
+		cpu.regX = testcase.regX;
+		cpu.regY = testcase.regY;
+		cpu.regPC = 0x0123;
+		cpu.cFlag = testcase.flagsIn.find('c') != std::string::npos;
+		cpu.decimalMode = testcase.flagsIn.find('d') != std::string::npos;
+		cpu.nFlag = testcase.flagsIn.find('n') != std::string::npos;
+		cpu.vFlag = testcase.flagsIn.find('v') != std::string::npos;
+		cpu.zFlag = testcase.flagsIn.find('z') != std::string::npos;
+		cpu.step();
+
+		BOOST_CHECK_EQUAL(cpu.regA, testcase.expectedRegA);
+		BOOST_CHECK_EQUAL(cpu.regX, testcase.expectedRegX);
+		BOOST_CHECK_EQUAL(cpu.regY, testcase.expectedRegY);
+		BOOST_CHECK_EQUAL(ram.bytes[0x2345], testcase.value2);
+		BOOST_CHECK_EQUAL(cpu.regPC, 0x125);
+		BOOST_CHECK_EQUAL(cpu.cycleCount, testcase.expectedCycles);
+		BOOST_CHECK_EQUAL(cpu.cFlag, testcase.expectedFlags.find('c') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.decimalMode, testcase.expectedFlags.find('d') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.nFlag, testcase.expectedFlags.find('n') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.vFlag, testcase.expectedFlags.find('v') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.zFlag, testcase.expectedFlags.find('z') != std::string::npos);
+	}
+}
+
 BOOST_AUTO_TEST_CASE(test_asl_instructions)
 {
 	Ram ram(64 * 1024);

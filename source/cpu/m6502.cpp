@@ -915,8 +915,11 @@ void m6502::step()
 			}
 			break;
 		case 0x81:
-			//formatIndirectXInstruction(stringStream, "STA", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				writeIndexedIndirect(regA);
+				regPC += 2;
+				cycleCount += 6;
+			}
 			break;
 		case 0x84:
 			//formatZPageInstruction(stringStream, "STY", addressBus.readByte(pc+1));
