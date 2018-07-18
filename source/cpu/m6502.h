@@ -39,7 +39,9 @@ public:
 	bool interruptDisable;
 
 private:
+	std::uint16_t getIndexedIndirectAddress();
 	std::uint8_t readIndexedIndirect();
+	void writeIndexedIndirect(std::uint8_t val);
 	std::uint8_t readZeroPageValue();
 	std::uint8_t readAbsoluteX();
 	void doADC(std::uint8_t val);

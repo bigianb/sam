@@ -420,12 +420,27 @@ void m6502::reset()
 	regPC = addressBus.readByte(0xFFFD) * 256 + addressBus.readByte(0xFFFC);
 }
 
+std::uint16_t m6502::getIndexedIndirectAddress()
+{
+	std::uint8_t nn = addressBus.readByte(regPC+1);
+	std::uint8_t zPageAddr = nn + regX;
+	std::uint8_t lo = addressBus.readByte(zPageAddr);
+	std::uint8_t hi = addressBus.readByte(zPageAddr+1);		// Unsure if this should wrap to the zero page.
+	return (hi << 8) | lo;
+}
+
 std::uint8_t m6502::readIndexedIndirect()
 {
 	// e.g. OPCODE ($nn,X)
-	std::uint8_t nn = addressBus.readByte(regPC+1);
-	std::uint8_t zPageAddr = nn + regX;
-	return addressBus.readByte(zPageAddr);
+	std::uint16_t addr = getIndexedIndirectAddress();
+	return addressBus.readByte(addr);
+}
+
+void m6502::writeIndexedIndirect(std::uint8_t val)
+{
+	// e.g. OPCODE ($nn,X)
+	std::uint16_t addr = getIndexedIndirectAddress();
+	addressBus.writeByte(addr, val);
 }
 
 std::uint8_t m6502::readAbsoluteX()

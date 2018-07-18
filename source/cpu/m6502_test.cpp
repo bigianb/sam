@@ -519,7 +519,9 @@ BOOST_AUTO_TEST_CASE(test_and_instructions)
 	auto desc = cpu.disassemble(0x123, debugInfo);
 	BOOST_CHECK_EQUAL(desc.line, "AND ($10, X)");
 
-	ram.bytes[0x11] = 0x13;
+	ram.bytes[0x11] = 0x11;
+	ram.bytes[0x12] = 0x12;
+	ram.bytes[0x1211] = 0x13;
 
 	cpu.cycleCount = 0;
 	cpu.regA = 0x33;
@@ -536,7 +538,7 @@ BOOST_AUTO_TEST_CASE(test_and_instructions)
 	// result is negative
 	cpu.regPC = 0x0123;
 	cpu.regA = 0x80;
-	ram.bytes[0x11] = 0x83;
+	ram.bytes[0x1211] = 0x83;
 	cpu.nFlag = false;
 	cpu.zFlag = true;
 	cpu.step();
@@ -546,7 +548,7 @@ BOOST_AUTO_TEST_CASE(test_and_instructions)
 	// result is zero
 	cpu.regPC = 0x0123;
 	cpu.regA = 0xFF;
-	ram.bytes[0x11] = 0x0;
+	ram.bytes[0x1211] = 0x0;
 	cpu.nFlag = false;
 	cpu.zFlag = true;
 	cpu.step();
@@ -601,7 +603,9 @@ BOOST_AUTO_TEST_CASE(test_or_instructions)
 	auto desc = cpu.disassemble(0x123, debugInfo);
 	BOOST_CHECK_EQUAL(desc.line, "ORA ($10, X)");
 
-	ram.bytes[0x11] = 0x13;
+	ram.bytes[0x11] = 0x11;
+	ram.bytes[0x12] = 0x12;
+	ram.bytes[0x1211] = 0x13;
 
 	cpu.cycleCount = 0;
 	cpu.regA = 0x20;
@@ -618,7 +622,7 @@ BOOST_AUTO_TEST_CASE(test_or_instructions)
 	// result is negative
 	cpu.regPC = 0x0123;
 	cpu.regA = 0x20;
-	ram.bytes[0x11] = 0x83;
+	ram.bytes[0x1211] = 0x83;
 	cpu.nFlag = false;
 	cpu.zFlag = true;
 	cpu.step();
@@ -628,7 +632,7 @@ BOOST_AUTO_TEST_CASE(test_or_instructions)
 	// result is zero
 	cpu.regPC = 0x0123;
 	cpu.regA = 0x0;
-	ram.bytes[0x11] = 0x0;
+	ram.bytes[0x1211] = 0x0;
 	cpu.nFlag = false;
 	cpu.zFlag = true;
 	cpu.step();
@@ -682,7 +686,9 @@ BOOST_AUTO_TEST_CASE(test_eor_instructions)
 	auto desc = cpu.disassemble(0x123, debugInfo);
 	BOOST_CHECK_EQUAL(desc.line, "EOR ($10, X)");
 
-	ram.bytes[0x11] = 0x53;
+	ram.bytes[0x11] = 0x11;
+	ram.bytes[0x12] = 0x12;
+	ram.bytes[0x1211] = 0x53;
 
 	cpu.cycleCount = 0;
 	cpu.regA = 0x60;
@@ -699,7 +705,7 @@ BOOST_AUTO_TEST_CASE(test_eor_instructions)
 	// result is negative
 	cpu.regPC = 0x0123;
 	cpu.regA = 0x20;
-	ram.bytes[0x11] = 0x83;
+	ram.bytes[0x1211] = 0x83;
 	cpu.nFlag = false;
 	cpu.zFlag = true;
 	cpu.step();
@@ -709,7 +715,7 @@ BOOST_AUTO_TEST_CASE(test_eor_instructions)
 	// result is zero
 	cpu.regPC = 0x0123;
 	cpu.regA = 0x12;
-	ram.bytes[0x11] = 0x12;
+	ram.bytes[0x1211] = 0x12;
 	cpu.nFlag = false;
 	cpu.zFlag = true;
 	cpu.step();
