@@ -462,6 +462,13 @@ std::uint8_t m6502::readZeroPageValue()
 	return addressBus.readByte(zPageAddr);
 }
 
+void m6502::writeZeroPageValue(std::uint8_t val)
+{
+	std::uint8_t zPageAddr = addressBus.readByte(regPC + 1);
+	return addressBus.writeByte(zPageAddr, val);
+}
+
+
 void m6502::pushByte(std::uint8_t val)
 {
 	std::uint16_t addr = regSP + 0x100;
@@ -922,16 +929,25 @@ void m6502::step()
 			}
 			break;
 		case 0x84:
-			//formatZPageInstruction(stringStream, "STY", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				writeZeroPageValue(regY);
+				regPC += 2;
+				cycleCount += 3;
+			}
 			break;
 		case 0x85:
-			//formatZPageInstruction(stringStream, "STA", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				writeZeroPageValue(regA);
+				regPC += 2;
+				cycleCount += 3;
+			}
 			break;
 		case 0x86:
-			//formatZPageInstruction(stringStream, "STX", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				writeZeroPageValue(regX);
+				regPC += 2;
+				cycleCount += 3;
+			}
 			break;
 		case 0x88:
 			//stringStream << "DEY";

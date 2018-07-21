@@ -43,6 +43,7 @@ private:
 	std::uint8_t readIndexedIndirect();
 	void writeIndexedIndirect(std::uint8_t val);
 	std::uint8_t readZeroPageValue();
+	void writeZeroPageValue(std::uint8_t val);
 	std::uint8_t readAbsoluteX();
 	void doADC(std::uint8_t val);
 	void doAND(std::uint8_t val);
