@@ -950,18 +950,31 @@ void m6502::step()
 			}
 			break;
 		case 0x88:
-			//stringStream << "DEY";
+			{
+				regY -= 1;
+				zFlag = regY == 0;
+				nFlag = regY >= 0x80;
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0x8a:
-			//stringStream << "TXA";
+			{
+				regA = regX;
+				zFlag = regA == 0;
+				nFlag = regA >= 0x80;
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0x8d:
 			//formatAbsoluteInstructionW(stringStream, "STA", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
 			//desc.numBytes = 3;
 			break;
 		case 0x90:
-			//formatRelativeInstruction(stringStream, "BCC", addressBus.readByte(pc+1), pc);
-			//desc.numBytes = 2;
+			{
+				doBranch(!cFlag, addressBus.readByte(regPC + 1));
+			}
 			break;
 		case 0x91:
 			//formatIndirectYInstruction(stringStream, "STA", addressBus.readByte(pc+1));
@@ -972,7 +985,13 @@ void m6502::step()
 			//desc.numBytes = 2;
 			break;
 		case 0x98:
-			//stringStream << "TYA";
+			{
+				regA = regY;
+				zFlag = regA == 0;
+				nFlag = regA >= 0x80;
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0x99:
 			//formatAbsoluteYInstructionW(stringStream, "STA", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
@@ -1016,8 +1035,9 @@ void m6502::step()
 			//desc.numBytes = 3;
 			break;
 		case 0xb0:
-			//formatRelativeInstruction(stringStream, "BCS", addressBus.readByte(pc + 1), pc);
-			//desc.numBytes = 2;
+			{
+				doBranch(cFlag, addressBus.readByte(regPC + 1));
+			}
 			break;
 		case 0xb1:
 			//formatIndirectYInstruction(stringStream, "LDA", addressBus.readByte(pc + 1));
@@ -1052,22 +1072,35 @@ void m6502::step()
 			//desc.numBytes = 2;
 			break;
 		case 0xc8:
-			//stringStream << "INY";
+			{
+				regY += 1;
+				zFlag = regY == 0;
+				nFlag = regY >= 0x80;
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0xc9:
 			//formatImmediateInstruction(stringStream, "CMP", addressBus.readByte(pc+1));
 			//desc.numBytes = 2;
 			break;
 		case 0xca:
-			//stringStream << "DEX";
+			{
+				regX -= 1;
+				zFlag = regX == 0;
+				nFlag = regX >= 0x80;
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0xcc:
 			//formatAbsoluteInstructionR(stringStream, "CPY", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
 			//desc.numBytes = 3;
 			break;
 		case 0xd0:
-			//formatRelativeInstruction(stringStream, "BNE", addressBus.readByte(pc+1), pc);
-			//desc.numBytes = 2;
+			{
+				doBranch(!zFlag, addressBus.readByte(regPC + 1));
+			}
 			break;
 		case 0xd8:
 			{
@@ -1121,8 +1154,9 @@ void m6502::step()
 			//desc.numBytes = 3;
 			break;
 		case 0xf0:
-			//formatRelativeInstruction(stringStream, "BEQ", addressBus.readByte(pc+1), pc);
-			//desc.numBytes = 2;
+			{
+				doBranch(zFlag, addressBus.readByte(regPC + 1));
+			}
 			break;
 		case 0xf8:
 			{
