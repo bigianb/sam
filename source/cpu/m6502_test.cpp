@@ -34,6 +34,7 @@ struct M6502TestCase
 	int expectedRegA;
 	int expectedRegX;
 	int expectedRegY;
+	int expectedMemval;
 	std::string expectedFlags;
 
 	M6502TestCase(
@@ -65,7 +66,28 @@ struct M6502TestCase
 		int expectedRegX_in,
 		int expectedRegY_in,
 		std::string expectedFlags_in) : flagsIn(flagsIn_in), opcode(opcode_in), value1(value1_in), value2(value2_in), memval(memval_in),
-		regA(regA_in), regX(regX_in), regY(regY_in), expectedDesc(expectedDesc_in), expectedCycles(expectedCycles_in),
+		regA(regA_in), regX(regX_in), regY(regY_in), expectedDesc(expectedDesc_in), expectedCycles(expectedCycles_in), expectedMemval(memval_in),
+		expectedRegA(expectedRegA_in), expectedRegX(expectedRegX_in), expectedRegY(expectedRegY_in), expectedFlags(expectedFlags_in)
+	{
+	}
+
+	M6502TestCase(
+		std::string flagsIn_in,
+		std::uint8_t opcode_in,
+		std::uint8_t value1_in,
+		std::uint8_t value2_in,
+		std::uint8_t memval_in,
+		int regA_in,
+		int regX_in,
+		int regY_in,
+		std::string expectedDesc_in,
+		int expectedCycles_in,
+		int expectedMemval_in,
+		int expectedRegA_in,
+		int expectedRegX_in,
+		int expectedRegY_in,
+		std::string expectedFlags_in) : flagsIn(flagsIn_in), opcode(opcode_in), value1(value1_in), value2(value2_in), memval(memval_in),
+		regA(regA_in), regX(regX_in), regY(regY_in), expectedDesc(expectedDesc_in), expectedCycles(expectedCycles_in), expectedMemval(expectedMemval_in),
 		expectedRegA(expectedRegA_in), expectedRegX(expectedRegX_in), expectedRegY(expectedRegY_in), expectedFlags(expectedFlags_in)
 	{
 	}
@@ -92,12 +114,13 @@ BOOST_AUTO_TEST_CASE(test_absx_instructions)
 	cpu.reset();
 
 	for (const auto& testcase : tests) {
+		BOOST_TEST_CHECKPOINT(testcase.expectedDesc);
 		ram.bytes[0x0123] = testcase.opcode;
 		ram.bytes[0x0124] = testcase.value1;
 		ram.bytes[0x0125] = testcase.value2;
 
 		int absval = testcase.value1 + (testcase.value2 << 8);
-		ram.bytes[absval + testcase.expectedRegX] = testcase.memval;
+		ram.bytes[absval + testcase.regX] = testcase.memval;
 
 		const auto desc = cpu.disassemble(0x123, debugInfo);
 		BOOST_CHECK_EQUAL(desc.line, testcase.expectedDesc);
@@ -114,10 +137,185 @@ BOOST_AUTO_TEST_CASE(test_absx_instructions)
 		cpu.zFlag = testcase.flagsIn.find('z') != std::string::npos;
 		cpu.step();
 
+		BOOST_CHECK_EQUAL(ram.bytes[absval + testcase.regX], testcase.expectedMemval);
 		BOOST_CHECK_EQUAL(cpu.regA, testcase.expectedRegA);
 		BOOST_CHECK_EQUAL(cpu.regX, testcase.expectedRegX);
 		BOOST_CHECK_EQUAL(cpu.regY, testcase.expectedRegY);
 		BOOST_CHECK_EQUAL(cpu.regPC, 0x126);
+		BOOST_CHECK_EQUAL(cpu.cycleCount, testcase.expectedCycles);
+		BOOST_CHECK_EQUAL(cpu.cFlag, testcase.expectedFlags.find('c') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.decimalMode, testcase.expectedFlags.find('d') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.nFlag, testcase.expectedFlags.find('n') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.vFlag, testcase.expectedFlags.find('v') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.zFlag, testcase.expectedFlags.find('z') != std::string::npos);
+	}
+}
+
+
+BOOST_AUTO_TEST_CASE(test_abs_instructions)
+{
+	// Single opcode instructions
+	M6502TestCase tests[]{
+		//flags, opcode, lo, hi, memval, A, X, Y, desc, cycles, AOut, XOut, YOut, flagsOut
+		M6502TestCase("c---z", 0x8d, 0x34, 0x12, 0x70, 0x10, 0x22, 0x33, "STA $1234", 4, 0x10, 0x10, 0x22, 0x33, "c---z")
+	};
+
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	for (const auto& testcase : tests) {
+		BOOST_TEST_CHECKPOINT(testcase.expectedDesc);
+		ram.bytes[0x0123] = testcase.opcode;
+		ram.bytes[0x0124] = testcase.value1;
+		ram.bytes[0x0125] = testcase.value2;
+
+		int absval = testcase.value1 + (testcase.value2 << 8);
+		ram.bytes[absval] = testcase.memval;
+
+		const auto desc = cpu.disassemble(0x123, debugInfo);
+		BOOST_CHECK_EQUAL(desc.line, testcase.expectedDesc);
+
+		cpu.cycleCount = 0;
+		cpu.regA = testcase.regA;
+		cpu.regX = testcase.regX;
+		cpu.regY = testcase.regY;
+		cpu.regPC = 0x0123;
+		cpu.cFlag = testcase.flagsIn.find('c') != std::string::npos;
+		cpu.decimalMode = testcase.flagsIn.find('d') != std::string::npos;
+		cpu.nFlag = testcase.flagsIn.find('n') != std::string::npos;
+		cpu.vFlag = testcase.flagsIn.find('v') != std::string::npos;
+		cpu.zFlag = testcase.flagsIn.find('z') != std::string::npos;
+		cpu.step();
+
+		BOOST_CHECK_EQUAL(ram.bytes[absval], testcase.expectedMemval);
+		BOOST_CHECK_EQUAL(cpu.regA, testcase.expectedRegA);
+		BOOST_CHECK_EQUAL(cpu.regX, testcase.expectedRegX);
+		BOOST_CHECK_EQUAL(cpu.regY, testcase.expectedRegY);
+		BOOST_CHECK_EQUAL(cpu.regPC, 0x126);
+		BOOST_CHECK_EQUAL(cpu.cycleCount, testcase.expectedCycles);
+		BOOST_CHECK_EQUAL(cpu.cFlag, testcase.expectedFlags.find('c') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.decimalMode, testcase.expectedFlags.find('d') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.nFlag, testcase.expectedFlags.find('n') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.vFlag, testcase.expectedFlags.find('v') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.zFlag, testcase.expectedFlags.find('z') != std::string::npos);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(test_zpagex_instructions)
+{
+	// Single opcode instructions
+	M6502TestCase tests[]{
+		//flags, opcode, lo, hi, memval, A, X, Y, desc, cycles, AOut, XOut, YOut, flagsOut
+		M6502TestCase("c---z", 0x95, 0x34, 0x12, 0x70, 0x10, 0x22, 0x33, "STA $34, X", 4, 0x10, 0x10, 0x22, 0x33, "c---z")
+	};
+
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	for (const auto& testcase : tests) {
+		BOOST_TEST_CHECKPOINT(testcase.expectedDesc);
+		ram.bytes[0x0123] = testcase.opcode;
+		ram.bytes[0x0124] = testcase.value1;
+		ram.bytes[0x0125] = testcase.value2;
+
+		std::uint8_t zxaddr = testcase.value1 + testcase.regX;
+		ram.bytes[zxaddr] = testcase.memval;
+
+		const auto desc = cpu.disassemble(0x123, debugInfo);
+		BOOST_CHECK_EQUAL(desc.line, testcase.expectedDesc);
+
+		cpu.cycleCount = 0;
+		cpu.regA = testcase.regA;
+		cpu.regX = testcase.regX;
+		cpu.regY = testcase.regY;
+		cpu.regPC = 0x0123;
+		cpu.cFlag = testcase.flagsIn.find('c') != std::string::npos;
+		cpu.decimalMode = testcase.flagsIn.find('d') != std::string::npos;
+		cpu.nFlag = testcase.flagsIn.find('n') != std::string::npos;
+		cpu.vFlag = testcase.flagsIn.find('v') != std::string::npos;
+		cpu.zFlag = testcase.flagsIn.find('z') != std::string::npos;
+		cpu.step();
+
+		BOOST_CHECK_EQUAL(ram.bytes[zxaddr], testcase.expectedMemval);
+		BOOST_CHECK_EQUAL(cpu.regA, testcase.expectedRegA);
+		BOOST_CHECK_EQUAL(cpu.regX, testcase.expectedRegX);
+		BOOST_CHECK_EQUAL(cpu.regY, testcase.expectedRegY);
+		BOOST_CHECK_EQUAL(cpu.regPC, 0x125);
+		BOOST_CHECK_EQUAL(cpu.cycleCount, testcase.expectedCycles);
+		BOOST_CHECK_EQUAL(cpu.cFlag, testcase.expectedFlags.find('c') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.decimalMode, testcase.expectedFlags.find('d') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.nFlag, testcase.expectedFlags.find('n') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.vFlag, testcase.expectedFlags.find('v') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.zFlag, testcase.expectedFlags.find('z') != std::string::npos);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(test_indirect_indexed_y_instructions)
+{
+	// Single opcode instructions
+	M6502TestCase tests[]{
+		//flags, opcode, lo, hi, memval, A, X, Y, desc, cycles, AOut, XOut, YOut, flagsOut
+		M6502TestCase("c---z", 0x91, 0x34, 0x12, 0x70, 0x10, 0x22, 0x33, "STA ($34), Y", 6, 0x10, 0x10, 0x22, 0x33, "c---z")
+	};
+
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	for (const auto& testcase : tests) {
+		BOOST_TEST_CHECKPOINT(testcase.expectedDesc);
+		ram.bytes[0x0123] = testcase.opcode;
+		ram.bytes[0x0124] = testcase.value1;
+
+		std::uint8_t zaddr = testcase.value1;
+		ram.bytes[zaddr] = 0x00;
+		ram.bytes[zaddr+1] = 0x10;
+		std::uint16_t targetAddr = 0x1000 + testcase.regY;
+		ram.bytes[targetAddr] = testcase.memval;
+
+		const auto desc = cpu.disassemble(0x123, debugInfo);
+		BOOST_CHECK_EQUAL(desc.line, testcase.expectedDesc);
+
+		cpu.cycleCount = 0;
+		cpu.regA = testcase.regA;
+		cpu.regX = testcase.regX;
+		cpu.regY = testcase.regY;
+		cpu.regPC = 0x0123;
+		cpu.cFlag = testcase.flagsIn.find('c') != std::string::npos;
+		cpu.decimalMode = testcase.flagsIn.find('d') != std::string::npos;
+		cpu.nFlag = testcase.flagsIn.find('n') != std::string::npos;
+		cpu.vFlag = testcase.flagsIn.find('v') != std::string::npos;
+		cpu.zFlag = testcase.flagsIn.find('z') != std::string::npos;
+		cpu.step();
+
+		BOOST_CHECK_EQUAL(ram.bytes[targetAddr], testcase.expectedMemval);
+		BOOST_CHECK_EQUAL(cpu.regA, testcase.expectedRegA);
+		BOOST_CHECK_EQUAL(cpu.regX, testcase.expectedRegX);
+		BOOST_CHECK_EQUAL(cpu.regY, testcase.expectedRegY);
+		BOOST_CHECK_EQUAL(cpu.regPC, 0x125);
 		BOOST_CHECK_EQUAL(cpu.cycleCount, testcase.expectedCycles);
 		BOOST_CHECK_EQUAL(cpu.cFlag, testcase.expectedFlags.find('c') != std::string::npos);
 		BOOST_CHECK_EQUAL(cpu.decimalMode, testcase.expectedFlags.find('d') != std::string::npos);

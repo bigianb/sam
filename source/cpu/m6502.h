@@ -40,10 +40,15 @@ public:
 
 private:
 	std::uint16_t getIndexedIndirectAddress();
+	std::uint16_t getIndirectIndexedYAddress();
 	std::uint8_t readIndexedIndirect();
+	std::uint8_t readIndirectIndexedY();
+	void writeIndirectIndexedY(std::uint8_t val);
 	void writeIndexedIndirect(std::uint8_t val);
 	std::uint8_t readZeroPageValue();
 	void writeZeroPageValue(std::uint8_t val);
+	void writeZeroPageXValue(std::uint8_t val);
+	void writeAbsolute(std::uint8_t val);
 	std::uint8_t readAbsoluteX();
 	void doADC(std::uint8_t val);
 	void doAND(std::uint8_t val);

@@ -429,6 +429,15 @@ std::uint16_t m6502::getIndexedIndirectAddress()
 	return (hi << 8) | lo;
 }
 
+std::uint16_t m6502::getIndirectIndexedYAddress()
+{
+	std::uint8_t zPageAddr = addressBus.readByte(regPC + 1);
+	std::uint8_t lo = addressBus.readByte(zPageAddr);
+	std::uint8_t hi = addressBus.readByte(zPageAddr + 1);		// Unsure if this should wrap to the zero page.
+	std::uint16_t indirectAddr = (hi << 8) | lo;
+	return indirectAddr + regY;
+}
+
 std::uint8_t m6502::readIndexedIndirect()
 {
 	// e.g. OPCODE ($nn,X)
@@ -440,6 +449,26 @@ void m6502::writeIndexedIndirect(std::uint8_t val)
 {
 	// e.g. OPCODE ($nn,X)
 	std::uint16_t addr = getIndexedIndirectAddress();
+	addressBus.writeByte(addr, val);
+}
+
+std::uint8_t m6502::readIndirectIndexedY()
+{
+	// e.g. OPCODE ($nn),Y
+	std::uint16_t addr = getIndirectIndexedYAddress();
+	return addressBus.readByte(addr);
+}
+
+void m6502::writeIndirectIndexedY(std::uint8_t val)
+{
+	// e.g. OPCODE ($nn), Y
+	std::uint16_t addr = getIndirectIndexedYAddress();
+	addressBus.writeByte(addr, val);
+}
+
+void m6502::writeAbsolute(std::uint8_t val)
+{
+	std::uint16_t addr = addressBus.readByte(regPC + 1) + (addressBus.readByte(regPC + 2) << 8);
 	addressBus.writeByte(addr, val);
 }
 
@@ -465,9 +494,15 @@ std::uint8_t m6502::readZeroPageValue()
 void m6502::writeZeroPageValue(std::uint8_t val)
 {
 	std::uint8_t zPageAddr = addressBus.readByte(regPC + 1);
-	return addressBus.writeByte(zPageAddr, val);
+	addressBus.writeByte(zPageAddr, val);
 }
 
+void m6502::writeZeroPageXValue(std::uint8_t val)
+{
+	std::uint8_t zPageAddr = addressBus.readByte(regPC + 1);
+	std::uint8_t zPageXAddr = zPageAddr + regX;
+	addressBus.writeByte(zPageXAddr, val);
+}
 
 void m6502::pushByte(std::uint8_t val)
 {
@@ -968,8 +1003,11 @@ void m6502::step()
 			}
 			break;
 		case 0x8d:
-			//formatAbsoluteInstructionW(stringStream, "STA", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				writeAbsolute(regA);
+				regPC += 3;
+				cycleCount += 4;
+			}
 			break;
 		case 0x90:
 			{
@@ -977,12 +1015,18 @@ void m6502::step()
 			}
 			break;
 		case 0x91:
-			//formatIndirectYInstruction(stringStream, "STA", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				writeIndirectIndexedY(regA);
+				regPC += 2;
+				cycleCount += 6;
+			}
 			break;
 		case 0x95:
-			//formatZPageXInstruction(stringStream, "STA", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				writeZeroPageXValue(regA);
+				regPC += 2;
+				cycleCount += 4;
+			}
 			break;
 		case 0x98:
 			{
