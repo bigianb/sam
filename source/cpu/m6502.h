@@ -53,6 +53,7 @@ private:
 	void writeAbsoluteY(std::uint8_t val);
 	std::uint8_t readAbsolute();
 	std::uint8_t readAbsoluteX();
+	std::uint8_t readAbsoluteY();
 	void doADC(std::uint8_t val);
 	void doAND(std::uint8_t val);
 	void doEOR(std::uint8_t val);

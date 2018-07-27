@@ -496,6 +496,18 @@ std::uint8_t m6502::readAbsoluteX()
 	return addressBus.readByte(readAddr);
 }
 
+std::uint8_t m6502::readAbsoluteY()
+{
+	// e.g. OPCODE $nn, Y
+	std::uint16_t addr = addressBus.readByte(regPC + 1) + (addressBus.readByte(regPC + 2) << 8);
+	std::uint16_t readAddr = addr + regY;
+	if ((addr >> 8) != (readAddr >> 8)) {
+		// pay the penalty for carry addition
+		cycleCount += 1;
+	}
+	return addressBus.readByte(readAddr);
+}
+
 void m6502::writeAbsoluteY(std::uint8_t val)
 {
 	std::uint16_t addr = addressBus.readByte(regPC + 1) + (addressBus.readByte(regPC + 2) << 8) + regY;
@@ -1167,16 +1179,28 @@ void m6502::step()
 			}
 			break;
 		case 0xb5:
-			//formatZPageXInstruction(stringStream, "LDA", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				regA = readZeroPageXValue();
+				setNZFlags(regA);
+				regPC += 2;
+				cycleCount += 4;
+			}
 			break;
 		case 0xb9:
-			//formatAbsoluteYInstructionR(stringStream, "LDA", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				regA = readAbsoluteY();
+				setNZFlags(regA);
+				regPC += 3;
+				cycleCount += 4;
+			}
 			break;
 		case 0xbd:
-			//formatAbsoluteXInstructionR(stringStream, "LDA", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				regA = readAbsoluteX();
+				setNZFlags(regA);
+				regPC += 3;
+				cycleCount += 4;
+			}
 			break;
 		case 0xbc:
 			//formatAbsoluteXInstructionR(stringStream, "LDY", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
@@ -1285,7 +1309,8 @@ void m6502::step()
 			}
 			break;
 		default:
-			std::cerr << "unknown opcode: 0x" << std::setw(2) << std::setfill('0') << std::hex << opcode;
+			std::cerr << "unknown opcode: 0x" << std::setw(2) << std::setfill('0') << std::hex << opcode << " , ";
+			std::cerr << "PC = 0x" << std::setw(4) << std::setfill('0') << std::hex << regPC;
 			break;
 	}
 }
