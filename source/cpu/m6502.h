@@ -46,9 +46,12 @@ private:
 	void writeIndirectIndexedY(std::uint8_t val);
 	void writeIndexedIndirect(std::uint8_t val);
 	std::uint8_t readZeroPageValue();
+	std::uint8_t readZeroPageXValue();
 	void writeZeroPageValue(std::uint8_t val);
 	void writeZeroPageXValue(std::uint8_t val);
 	void writeAbsolute(std::uint8_t val);
+	void writeAbsoluteY(std::uint8_t val);
+	std::uint8_t readAbsolute();
 	std::uint8_t readAbsoluteX();
 	void doADC(std::uint8_t val);
 	void doAND(std::uint8_t val);
@@ -64,6 +67,11 @@ private:
 	std::uint16_t popShort();
 	void pushShort(std::uint16_t val);
 	void doBranch(bool predicate, std::int8_t offset);
+
+	void setNZFlags(std::uint8_t val){
+				zFlag = val == 0;
+				nFlag = val >= 0x80;
+		}
 
 private:
 	AddressBus & addressBus;

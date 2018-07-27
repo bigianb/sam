@@ -5,6 +5,9 @@
 #include "../ram.h"
 #include "../direct_address_bus.h"
 
+// run with m6502_test --log_level=message for detailed output
+
+
 BOOST_AUTO_TEST_CASE(test_reset)
 {
     Ram ram(64 * 1024);
@@ -29,11 +32,13 @@ struct M6502TestCase
 	int regA;
 	int regX;
 	int regY;
+	int regSP;
 	std::string expectedDesc;
 	int expectedCycles;
 	int expectedRegA;
 	int expectedRegX;
 	int expectedRegY;
+	int expectedRegSP;
 	int expectedMemval;
 	std::string expectedFlags;
 
@@ -45,9 +50,10 @@ struct M6502TestCase
 		std::string expectedDesc_in,
 		int expectedCycles_in,
 		int expectedRegA_in,
-		std::string expectedFlags_in) : flagsIn(flagsIn_in), opcode(opcode_in), value1(value1_in),
-										regA(regA_in), expectedDesc(expectedDesc_in), expectedCycles(expectedCycles_in),
-										expectedRegA(expectedRegA_in), expectedFlags(expectedFlags_in)
+		std::string expectedFlags_in) : M6502TestCase(
+							flagsIn_in, opcode_in, value1_in, 0x00, 0x00,
+							regA_in, 0x00, 0x00, 0x00, expectedDesc_in, expectedCycles_in, 0x00,
+							expectedRegA_in, 0x00, 0x00, 0x00, expectedFlags_in)
 	{
 	}
 
@@ -65,9 +71,10 @@ struct M6502TestCase
 		int expectedRegA_in,
 		int expectedRegX_in,
 		int expectedRegY_in,
-		std::string expectedFlags_in) : flagsIn(flagsIn_in), opcode(opcode_in), value1(value1_in), value2(value2_in), memval(memval_in),
-		regA(regA_in), regX(regX_in), regY(regY_in), expectedDesc(expectedDesc_in), expectedCycles(expectedCycles_in), expectedMemval(memval_in),
-		expectedRegA(expectedRegA_in), expectedRegX(expectedRegX_in), expectedRegY(expectedRegY_in), expectedFlags(expectedFlags_in)
+		std::string expectedFlags_in) : M6502TestCase(
+							flagsIn_in, opcode_in, value1_in, value2_in, memval_in,
+							regA_in, regX_in, regY_in, 0x00, expectedDesc_in, expectedCycles_in, memval_in,
+							expectedRegA_in, expectedRegX_in, expectedRegY_in, 0x00, expectedFlags_in)
 	{
 	}
 
@@ -86,11 +93,34 @@ struct M6502TestCase
 		int expectedRegA_in,
 		int expectedRegX_in,
 		int expectedRegY_in,
-		std::string expectedFlags_in) : flagsIn(flagsIn_in), opcode(opcode_in), value1(value1_in), value2(value2_in), memval(memval_in),
-		regA(regA_in), regX(regX_in), regY(regY_in), expectedDesc(expectedDesc_in), expectedCycles(expectedCycles_in), expectedMemval(expectedMemval_in),
-		expectedRegA(expectedRegA_in), expectedRegX(expectedRegX_in), expectedRegY(expectedRegY_in), expectedFlags(expectedFlags_in)
+		std::string expectedFlags_in) : M6502TestCase(
+							flagsIn_in, opcode_in, value1_in, value2_in, memval_in,
+							regA_in, regX_in, regY_in, 0x00, expectedDesc_in, expectedCycles_in, expectedMemval_in,
+							expectedRegA_in, expectedRegX_in, expectedRegY_in, 0x00, expectedFlags_in)
 	{
 	}
+
+	M6502TestCase(
+		std::string flagsIn_in,
+		std::uint8_t opcode_in,
+		std::uint8_t value1_in,
+		std::uint8_t value2_in,
+		std::uint8_t memval_in,
+		int regA_in,
+		int regX_in,
+		int regY_in,
+		int regSP_in,
+		std::string expectedDesc_in,
+		int expectedCycles_in,
+		int expectedMemval_in,
+		int expectedRegA_in,
+		int expectedRegX_in,
+		int expectedRegY_in,
+		int expectedRegSP_in,
+		std::string expectedFlags_in) : flagsIn(flagsIn_in), opcode(opcode_in), value1(value1_in), value2(value2_in), memval(memval_in),
+		regA(regA_in), regX(regX_in), regY(regY_in), regSP(regSP_in), expectedDesc(expectedDesc_in), expectedCycles(expectedCycles_in), expectedMemval(expectedMemval_in),
+		expectedRegA(expectedRegA_in), expectedRegX(expectedRegX_in), expectedRegY(expectedRegY_in), expectedRegSP(expectedRegSP_in), expectedFlags(expectedFlags_in)
+		{}
 };
 
 BOOST_AUTO_TEST_CASE(test_absx_instructions)
@@ -114,7 +144,7 @@ BOOST_AUTO_TEST_CASE(test_absx_instructions)
 	cpu.reset();
 
 	for (const auto& testcase : tests) {
-		BOOST_TEST_CHECKPOINT(testcase.expectedDesc);
+		BOOST_TEST_MESSAGE("running " << testcase.expectedDesc);
 		ram.bytes[0x0123] = testcase.opcode;
 		ram.bytes[0x0124] = testcase.value1;
 		ram.bytes[0x0125] = testcase.value2;
@@ -151,13 +181,13 @@ BOOST_AUTO_TEST_CASE(test_absx_instructions)
 	}
 }
 
-
-BOOST_AUTO_TEST_CASE(test_abs_instructions)
+BOOST_AUTO_TEST_CASE(test_absy_instructions)
 {
 	// Single opcode instructions
 	M6502TestCase tests[]{
-		//flags, opcode, lo, hi, memval, A, X, Y, desc, cycles, AOut, XOut, YOut, flagsOut
-		M6502TestCase("c---z", 0x8d, 0x34, 0x12, 0x70, 0x10, 0x22, 0x33, "STA $1234", 4, 0x10, 0x10, 0x22, 0x33, "c---z")
+		//flags, opcode, lo, hi, memval, A, X, Y, desc, cycles, expectedMemval, AOut, XOut, YOut, flagsOut
+		// 0x70 + 0x10 + carry. Extensive tests for ADC are in the zval case. 
+		M6502TestCase("c---z", 0x99, 0x34, 0x12, 0x70, 0x10, 0x22, 0x33, "STA $1234, Y", 5, 0x10, 0x10, 0x22, 0x33, "c---z")
 	};
 
 	Ram ram(64 * 1024);
@@ -172,7 +202,66 @@ BOOST_AUTO_TEST_CASE(test_abs_instructions)
 	cpu.reset();
 
 	for (const auto& testcase : tests) {
-		BOOST_TEST_CHECKPOINT(testcase.expectedDesc);
+		BOOST_TEST_MESSAGE("running " << testcase.expectedDesc);
+		ram.bytes[0x0123] = testcase.opcode;
+		ram.bytes[0x0124] = testcase.value1;
+		ram.bytes[0x0125] = testcase.value2;
+
+		int absval = testcase.value1 + (testcase.value2 << 8);
+		ram.bytes[absval + testcase.regY] = testcase.memval;
+
+		const auto desc = cpu.disassemble(0x123, debugInfo);
+		BOOST_CHECK_EQUAL(desc.line, testcase.expectedDesc);
+
+		cpu.cycleCount = 0;
+		cpu.regA = testcase.regA;
+		cpu.regX = testcase.regX;
+		cpu.regY = testcase.regY;
+		cpu.regPC = 0x0123;
+		cpu.cFlag = testcase.flagsIn.find('c') != std::string::npos;
+		cpu.decimalMode = testcase.flagsIn.find('d') != std::string::npos;
+		cpu.nFlag = testcase.flagsIn.find('n') != std::string::npos;
+		cpu.vFlag = testcase.flagsIn.find('v') != std::string::npos;
+		cpu.zFlag = testcase.flagsIn.find('z') != std::string::npos;
+		cpu.step();
+
+		BOOST_CHECK_EQUAL(ram.bytes[absval + testcase.regY], testcase.expectedMemval);
+		BOOST_CHECK_EQUAL(cpu.regA, testcase.expectedRegA);
+		BOOST_CHECK_EQUAL(cpu.regX, testcase.expectedRegX);
+		BOOST_CHECK_EQUAL(cpu.regY, testcase.expectedRegY);
+		BOOST_CHECK_EQUAL(cpu.regPC, 0x126);
+		BOOST_CHECK_EQUAL(cpu.cycleCount, testcase.expectedCycles);
+		BOOST_CHECK_EQUAL(cpu.cFlag, testcase.expectedFlags.find('c') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.decimalMode, testcase.expectedFlags.find('d') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.nFlag, testcase.expectedFlags.find('n') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.vFlag, testcase.expectedFlags.find('v') != std::string::npos);
+		BOOST_CHECK_EQUAL(cpu.zFlag, testcase.expectedFlags.find('z') != std::string::npos);
+	}
+}
+
+
+BOOST_AUTO_TEST_CASE(test_abs_instructions)
+{
+	// Single opcode instructions
+	M6502TestCase tests[]{
+		//flags, opcode, lo, hi, memval, A, X, Y, desc, cycles, memout, AOut, XOut, YOut, flagsOut
+		M6502TestCase("c---z", 0x8d, 0x34, 0x12, 0x70, 0x10, 0x22, 0x33, "STA $1234", 4, 0x10, 0x10, 0x22, 0x33, "c---z"),
+		M6502TestCase("c---z", 0xad, 0x34, 0x12, 0x70, 0x10, 0x22, 0x33, "LDA $1234", 4, 0x70, 0x70, 0x22, 0x33, "c----"),
+	};
+
+	Ram ram(64 * 1024);
+	DirectAddressBus bus(ram);
+	DebugInfo debugInfo;
+
+	for (int i = 0; i < 0xFFFF; ++i) {
+		ram.bytes[i] = 0;
+	}
+
+	m6502 cpu(bus);
+	cpu.reset();
+
+	for (const auto& testcase : tests) {
+		BOOST_TEST_MESSAGE("running " << testcase.expectedDesc);
 		ram.bytes[0x0123] = testcase.opcode;
 		ram.bytes[0x0124] = testcase.value1;
 		ram.bytes[0x0125] = testcase.value2;
@@ -214,7 +303,10 @@ BOOST_AUTO_TEST_CASE(test_zpagex_instructions)
 	// Single opcode instructions
 	M6502TestCase tests[]{
 		//flags, opcode, lo, hi, memval, A, X, Y, desc, cycles, AOut, XOut, YOut, flagsOut
-		M6502TestCase("c---z", 0x95, 0x34, 0x12, 0x70, 0x10, 0x22, 0x33, "STA $34, X", 4, 0x10, 0x10, 0x22, 0x33, "c---z")
+		M6502TestCase("c---z", 0x95, 0x34, 0x12, 0x70, 0x10, 0x22, 0x33, "STA $34, X", 4, 0x10, 0x10, 0x22, 0x33, "c---z"),
+		M6502TestCase("c---z", 0xb4, 0x34, 0x12, 0x70, 0x10, 0x22, 0x33, "LDY $34, X", 4, 0x70, 0x10, 0x22, 0x70, "c----"),
+		M6502TestCase("----z", 0xb4, 0x34, 0x12, 0x00, 0x10, 0x22, 0x33, "LDY $34, X", 4, 0x00, 0x10, 0x22, 0x00, "----z"),
+		M6502TestCase("----z", 0xb4, 0x34, 0x12, 0x90, 0x10, 0x22, 0x33, "LDY $34, X", 4, 0x90, 0x10, 0x22, 0x90, "-n---")
 	};
 
 	Ram ram(64 * 1024);
@@ -229,7 +321,7 @@ BOOST_AUTO_TEST_CASE(test_zpagex_instructions)
 	cpu.reset();
 
 	for (const auto& testcase : tests) {
-		BOOST_TEST_CHECKPOINT(testcase.expectedDesc);
+		BOOST_TEST_MESSAGE("running " << testcase.expectedDesc);
 		ram.bytes[0x0123] = testcase.opcode;
 		ram.bytes[0x0124] = testcase.value1;
 		ram.bytes[0x0125] = testcase.value2;
@@ -271,7 +363,10 @@ BOOST_AUTO_TEST_CASE(test_indirect_indexed_y_instructions)
 	// Single opcode instructions
 	M6502TestCase tests[]{
 		//flags, opcode, lo, hi, memval, A, X, Y, desc, cycles, AOut, XOut, YOut, flagsOut
-		M6502TestCase("c---z", 0x91, 0x34, 0x12, 0x70, 0x10, 0x22, 0x33, "STA ($34), Y", 6, 0x10, 0x10, 0x22, 0x33, "c---z")
+		M6502TestCase("c---z", 0x91, 0x34, 0x12, 0x70, 0x10, 0x22, 0x33, "STA ($34), Y", 6, 0x10, 0x10, 0x22, 0x33, "c---z"),
+		M6502TestCase("c---z", 0xB1, 0x34, 0x12, 0x70, 0x10, 0x22, 0x33, "LDA ($34), Y", 5, 0x70, 0x70, 0x22, 0x33, "c----"),
+		M6502TestCase("c----", 0xB1, 0x34, 0x12, 0x00, 0x10, 0x22, 0x73, "LDA ($34), Y", 6, 0x00, 0x00, 0x22, 0x73, "c---z"),
+		M6502TestCase("-----", 0xB1, 0x34, 0x12, 0x80, 0x10, 0x22, 0x73, "LDA ($34), Y", 6, 0x80, 0x80, 0x22, 0x73, "-n---")
 	};
 
 	Ram ram(64 * 1024);
@@ -286,14 +381,14 @@ BOOST_AUTO_TEST_CASE(test_indirect_indexed_y_instructions)
 	cpu.reset();
 
 	for (const auto& testcase : tests) {
-		BOOST_TEST_CHECKPOINT(testcase.expectedDesc);
+		BOOST_TEST_MESSAGE("running " << testcase.expectedDesc);
 		ram.bytes[0x0123] = testcase.opcode;
 		ram.bytes[0x0124] = testcase.value1;
 
 		std::uint8_t zaddr = testcase.value1;
-		ram.bytes[zaddr] = 0x00;
+		ram.bytes[zaddr] = 0xA0;
 		ram.bytes[zaddr+1] = 0x10;
-		std::uint16_t targetAddr = 0x1000 + testcase.regY;
+		std::uint16_t targetAddr = 0x10A0 + testcase.regY;
 		ram.bytes[targetAddr] = testcase.memval;
 
 		const auto desc = cpu.disassemble(0x123, debugInfo);
@@ -354,6 +449,7 @@ BOOST_AUTO_TEST_CASE(test_zpage_instructions)
 	cpu.reset();
 
 	for (const auto& testcase : zeroPageTests){
+		BOOST_TEST_MESSAGE("running " << testcase.expectedDesc);
 		ram.bytes[0x0123] = testcase.opcode;
 		ram.bytes[0x0124] = 0x10;
 
@@ -390,7 +486,17 @@ BOOST_AUTO_TEST_CASE(test_extended_zpage_instructions)
 		//            flags, opcode, lo,   mem_out,   memval, A,    X,    Y,    desc,      cycles, AOut, XOut, YOut, flagsOut
 		M6502TestCase("c---z", 0x84, 0x10, 0x33,      0x00,   0x10, 0x02, 0x33, "STY $10", 3,      0x10, 0x02, 0x33, "c---z"),
 		M6502TestCase("c---z", 0x85, 0x10, 0x10,      0x00,   0x10, 0x02, 0x33, "STA $10", 3,      0x10, 0x02, 0x33, "c---z"),
-		M6502TestCase("c---z", 0x86, 0x10, 0x02,      0x00,   0x10, 0x02, 0x33, "STX $10", 3,      0x10, 0x02, 0x33, "c---z")
+		M6502TestCase("c---z", 0x86, 0x10, 0x02,      0x00,   0x10, 0x02, 0x33, "STX $10", 3,      0x10, 0x02, 0x33, "c---z"),
+
+		M6502TestCase("c----", 0xa4, 0x10, 0x00,      0x00,   0x10, 0x02, 0x33, "LDY $10", 3,      0x10, 0x02, 0x00, "c---z"),
+		M6502TestCase("-----", 0xa4, 0x10, 0x95,      0x95,   0x10, 0x02, 0x33, "LDY $10", 3,      0x10, 0x02, 0x95, "-n---"),
+		M6502TestCase("-----", 0xa4, 0x10, 0x15,      0x15,   0x10, 0x02, 0x33, "LDY $10", 3,      0x10, 0x02, 0x15, "-----"),
+		M6502TestCase("c----", 0xa5, 0x10, 0x00,      0x00,   0x10, 0x02, 0x33, "LDA $10", 3,      0x00, 0x02, 0x33, "c---z"),
+		M6502TestCase("-----", 0xa5, 0x10, 0x95,      0x95,   0x10, 0x02, 0x33, "LDA $10", 3,      0x95, 0x02, 0x33, "-n---"),
+		M6502TestCase("-----", 0xa5, 0x10, 0x15,      0x15,   0x10, 0x02, 0x33, "LDA $10", 3,      0x15, 0x02, 0x33, "-----"),
+		M6502TestCase("c----", 0xa6, 0x10, 0x00,      0x00,   0x10, 0x02, 0x33, "LDX $10", 3,      0x10, 0x00, 0x33, "c---z"),
+		M6502TestCase("-----", 0xa6, 0x10, 0x95,      0x95,   0x10, 0x02, 0x33, "LDX $10", 3,      0x10, 0x95, 0x33, "-n---"),
+		M6502TestCase("-----", 0xa6, 0x10, 0x15,      0x15,   0x10, 0x02, 0x33, "LDX $10", 3,      0x10, 0x15, 0x33, "-----")
 	};
 
 	Ram ram(64 * 1024);
@@ -404,6 +510,7 @@ BOOST_AUTO_TEST_CASE(test_extended_zpage_instructions)
 	m6502 cpu(bus);
 
 	for (const auto& testcase : tests) {
+		BOOST_TEST_MESSAGE("running " << testcase.expectedDesc);
 		cpu.reset();
 		ram.bytes[0x0123] = testcase.opcode;
 		ram.bytes[0x0124] = testcase.value1;
@@ -443,7 +550,17 @@ BOOST_AUTO_TEST_CASE(test_imm_instructions)
 {
 	M6502TestCase tests[]{
 		//flags, opcode, immval, A, desc, cycles, AOut, flagsOut
-		M6502TestCase("c---z", 0x69, 0x15, 0x11, "ADC #15", 2, 0x11 + 0x15 + 0x01, "-----")
+		M6502TestCase("c---z", 0x69, 0x15, 0x11, "ADC #15", 2, 0x11 + 0x15 + 0x01, "-----"),
+		//            flags,   opcode, lo,   hi,   mem,  A,    X,    Y,    desc,      cycles, AOut, XOut, YOut, flagsOut
+		M6502TestCase("c---z", 0xA0,   0x15, 0x00, 0x00, 0x33, 0x44, 0x55, "LDY #15", 2,      0x33, 0x44, 0x15, "c----"),
+		M6502TestCase("----z", 0xA0,   0x95, 0x00, 0x00, 0x33, 0x44, 0x55, "LDY #95", 2,      0x33, 0x44, 0x95, "-n---"),
+		M6502TestCase("----z", 0xA0,   0x00, 0x00, 0x00, 0x33, 0x44, 0x55, "LDY #00", 2,      0x33, 0x44, 0x00, "----z"),
+		M6502TestCase("c---z", 0xA2,   0x15, 0x00, 0x00, 0x33, 0x44, 0x55, "LDX #15", 2,      0x33, 0x15, 0x55, "c----"),
+		M6502TestCase("----z", 0xA2,   0x95, 0x00, 0x00, 0x33, 0x44, 0x55, "LDX #95", 2,      0x33, 0x95, 0x55, "-n---"),
+		M6502TestCase("----z", 0xA2,   0x00, 0x00, 0x00, 0x33, 0x44, 0x55, "LDX #00", 2,      0x33, 0x00, 0x55, "----z"),
+		M6502TestCase("c---z", 0xA9,   0x15, 0x00, 0x00, 0x33, 0x44, 0x55, "LDA #15", 2,      0x15, 0x44, 0x55, "c----"),
+		M6502TestCase("----z", 0xA9,   0x95, 0x00, 0x00, 0x33, 0x44, 0x55, "LDA #95", 2,      0x95, 0x44, 0x55, "-n---"),
+		M6502TestCase("----z", 0xA9,   0x00, 0x00, 0x00, 0x33, 0x44, 0x55, "LDA #00", 2,      0x00, 0x44, 0x55, "----z")
 	};
 
 	Ram ram(64 * 1024);
@@ -458,6 +575,7 @@ BOOST_AUTO_TEST_CASE(test_imm_instructions)
 	cpu.reset();
 
 	for (const auto& testcase : tests) {
+		BOOST_TEST_MESSAGE("running " << testcase.expectedDesc);
 		ram.bytes[0x0123] = testcase.opcode;
 		ram.bytes[0x0124] = testcase.value1;
 
@@ -466,6 +584,8 @@ BOOST_AUTO_TEST_CASE(test_imm_instructions)
 
 		cpu.cycleCount = 0;
 		cpu.regA = testcase.regA;
+		cpu.regX = testcase.regX;
+		cpu.regY = testcase.regY;
 		cpu.regPC = 0x0123;
 		cpu.cFlag = testcase.flagsIn.find('c') != std::string::npos;
 		cpu.decimalMode = testcase.flagsIn.find('d') != std::string::npos;
@@ -475,6 +595,8 @@ BOOST_AUTO_TEST_CASE(test_imm_instructions)
 		cpu.step();
 
 		BOOST_CHECK_EQUAL(cpu.regA, testcase.expectedRegA);
+		BOOST_CHECK_EQUAL(cpu.regX, testcase.expectedRegX);
+		BOOST_CHECK_EQUAL(cpu.regY, testcase.expectedRegY);
 		BOOST_CHECK_EQUAL(cpu.regPC, 0x125);
 		BOOST_CHECK_EQUAL(cpu.cycleCount, testcase.expectedCycles);
 		BOOST_CHECK_EQUAL(cpu.cFlag, testcase.expectedFlags.find('c') != std::string::npos);
@@ -510,6 +632,7 @@ BOOST_AUTO_TEST_CASE(test_acc_instructions)
 	cpu.reset();
 
 	for (const auto& testcase : tests) {
+		BOOST_TEST_MESSAGE("running " << testcase.expectedDesc);
 		ram.bytes[0x0123] = testcase.opcode;
 
 		const auto desc = cpu.disassemble(0x123, debugInfo);
@@ -558,7 +681,15 @@ BOOST_AUTO_TEST_CASE(test_reg_instructions)
 		M6502TestCase("-----", 0xc8, 0x00, 0x00, 0x00, 0x10, 0x92, 0xFF, "INY", 2, 0x10, 0x92, 0x00, "----z"),
 		M6502TestCase("c---z", 0xCA, 0x00, 0x00, 0x00, 0x10, 0x33, 0x92, "DEX", 2, 0x10, 0x32, 0x92, "c----"),
 		M6502TestCase("c---z", 0xCA, 0x00, 0x00, 0x00, 0x10, 0x85, 0x92, "DEX", 2, 0x10, 0x84, 0x92, "c-n--"),
-		M6502TestCase("-----", 0xCA, 0x00, 0x00, 0x00, 0x10, 0x01, 0x92, "DEX", 2, 0x10, 0x00, 0x92, "----z")
+		M6502TestCase("-----", 0xCA, 0x00, 0x00, 0x00, 0x10, 0x01, 0x92, "DEX", 2, 0x10, 0x00, 0x92, "----z"),
+		M6502TestCase("c---z", 0xAA, 0x00, 0x00, 0xED, 0xED, 0x55, 0x00, "TAX", 2, 0xED, 0xED, 0x00, "cn---"),
+		M6502TestCase("-----", 0xAA, 0x00, 0x00, 0xED, 0x00, 0x55, 0x00, "TAX", 2, 0x00, 0x00, 0x00, "----z"),
+		M6502TestCase("----z", 0xAA, 0x00, 0x00, 0xED, 0x10, 0x55, 0x00, "TAX", 2, 0x10, 0x10, 0x00, "-----"),
+		M6502TestCase("c---z", 0xA8, 0x00, 0x00, 0xED, 0xED, 0x55, 0x00, "TAY", 2, 0xED, 0x55, 0xED, "cn---"),
+		M6502TestCase("-----", 0xA8, 0x00, 0x00, 0xED, 0x00, 0x55, 0x55, "TAY", 2, 0x00, 0x55, 0x00, "----z"),
+		M6502TestCase("----z", 0xA8, 0x00, 0x00, 0xED, 0x10, 0x55, 0x00, "TAY", 2, 0x10, 0x55, 0x10, "-----"),
+		//flags, opcode, lo, hi, memval, A, X, Y, SP, desc, cycles, memOut, AOut, XOut, YOut, SPOut, flagsOut
+		M6502TestCase("c---z", 0x9A, 0x00, 0x00, 0x00, 0x10, 0x35, 0x92, 0x00, "TXS", 2, 0x00, 0x10, 0x35, 0x92, 0x35, "c---z")
 
 	};
 
@@ -574,6 +705,7 @@ BOOST_AUTO_TEST_CASE(test_reg_instructions)
 	cpu.reset();
 
 	for (const auto& testcase : tests) {
+		BOOST_TEST_MESSAGE("running " << testcase.expectedDesc);
 		ram.bytes[0x0123] = testcase.opcode;
 
 		const auto desc = cpu.disassemble(0x123, debugInfo);
@@ -583,6 +715,7 @@ BOOST_AUTO_TEST_CASE(test_reg_instructions)
 		cpu.regA = testcase.regA;
 		cpu.regX = testcase.regX;
 		cpu.regY = testcase.regY;
+		cpu.regSP = testcase.regSP;
 		cpu.regPC = 0x0123;
 		cpu.cFlag = testcase.flagsIn.find('c') != std::string::npos;
 		cpu.decimalMode = testcase.flagsIn.find('d') != std::string::npos;
@@ -595,6 +728,7 @@ BOOST_AUTO_TEST_CASE(test_reg_instructions)
 		BOOST_CHECK_EQUAL(cpu.regX, testcase.expectedRegX);
 		BOOST_CHECK_EQUAL(cpu.regY, testcase.expectedRegY);
 		BOOST_CHECK_EQUAL(cpu.regPC, 0x124);
+		BOOST_CHECK_EQUAL(cpu.regSP, testcase.expectedRegSP);
 		BOOST_CHECK_EQUAL(cpu.cycleCount, testcase.expectedCycles);
 		BOOST_CHECK_EQUAL(cpu.cFlag, testcase.expectedFlags.find('c') != std::string::npos);
 		BOOST_CHECK_EQUAL(cpu.decimalMode, testcase.expectedFlags.find('d') != std::string::npos);
@@ -624,6 +758,7 @@ BOOST_AUTO_TEST_CASE(test_indexed_indirect_instructions)
 	m6502 cpu(bus);
 
 	for (const auto& testcase : tests) {
+		BOOST_TEST_MESSAGE("running " << testcase.expectedDesc);
 		cpu.reset();
 		ram.bytes[0x0123] = testcase.opcode;
 		ram.bytes[0x0124] = testcase.value1;

@@ -435,7 +435,13 @@ std::uint16_t m6502::getIndirectIndexedYAddress()
 	std::uint8_t lo = addressBus.readByte(zPageAddr);
 	std::uint8_t hi = addressBus.readByte(zPageAddr + 1);		// Unsure if this should wrap to the zero page.
 	std::uint16_t indirectAddr = (hi << 8) | lo;
-	return indirectAddr + regY;
+	std::uint16_t readAddr = indirectAddr + regY;
+	if ((indirectAddr >> 8) != (readAddr >> 8)) {
+		// pay the penalty for carry addition
+		cycleCount += 1;
+	}
+
+	return readAddr;
 }
 
 std::uint8_t m6502::readIndexedIndirect()
@@ -466,6 +472,12 @@ void m6502::writeIndirectIndexedY(std::uint8_t val)
 	addressBus.writeByte(addr, val);
 }
 
+std::uint8_t m6502::readAbsolute()
+{
+	std::uint16_t addr = addressBus.readByte(regPC + 1) + (addressBus.readByte(regPC + 2) << 8);
+	return addressBus.readByte(addr);
+}
+
 void m6502::writeAbsolute(std::uint8_t val)
 {
 	std::uint16_t addr = addressBus.readByte(regPC + 1) + (addressBus.readByte(regPC + 2) << 8);
@@ -484,11 +496,24 @@ std::uint8_t m6502::readAbsoluteX()
 	return addressBus.readByte(readAddr);
 }
 
+void m6502::writeAbsoluteY(std::uint8_t val)
+{
+	std::uint16_t addr = addressBus.readByte(regPC + 1) + (addressBus.readByte(regPC + 2) << 8) + regY;
+	addressBus.writeByte(addr, val);
+}
+
 std::uint8_t m6502::readZeroPageValue()
 {
 	// e.g. OPCODE $nn
 	std::uint8_t zPageAddr = addressBus.readByte(regPC + 1);
 	return addressBus.readByte(zPageAddr);
+}
+
+std::uint8_t m6502::readZeroPageXValue()
+{
+	std::uint8_t zPageAddr = addressBus.readByte(regPC + 1);
+	std::uint8_t zPageXAddr = zPageAddr + regX;
+	return addressBus.readByte(zPageXAddr);
 }
 
 void m6502::writeZeroPageValue(std::uint8_t val)
@@ -987,8 +1012,7 @@ void m6502::step()
 		case 0x88:
 			{
 				regY -= 1;
-				zFlag = regY == 0;
-				nFlag = regY >= 0x80;
+				setNZFlags(regY);
 				regPC += 1;
 				cycleCount += 2;
 			}
@@ -996,8 +1020,7 @@ void m6502::step()
 		case 0x8a:
 			{
 				regA = regX;
-				zFlag = regA == 0;
-				nFlag = regA >= 0x80;
+				setNZFlags(regX);
 				regPC += 1;
 				cycleCount += 2;
 			}
@@ -1031,52 +1054,96 @@ void m6502::step()
 		case 0x98:
 			{
 				regA = regY;
-				zFlag = regA == 0;
-				nFlag = regA >= 0x80;
+				setNZFlags(regA);
 				regPC += 1;
 				cycleCount += 2;
 			}
 			break;
 		case 0x99:
-			//formatAbsoluteYInstructionW(stringStream, "STA", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				writeAbsoluteY(regA);
+				regPC += 3;
+				cycleCount += 5;
+			}
 			break;
 		case 0x9A:
-			//stringStream << "TXS";
+			{
+				regSP = regX;
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0xa0:
-			//formatImmediateInstruction(stringStream, "LDY", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				regY = addressBus.readByte(regPC + 1);
+				setNZFlags(regY);
+				regPC += 2;
+				cycleCount += 2;
+			}
 			break;
 		case 0xA2:
-			//formatImmediateInstruction(stringStream, "LDX", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				regX = addressBus.readByte(regPC + 1);
+				setNZFlags(regX);
+				regPC += 2;
+				cycleCount += 2;
+			}
 			break;
 		case 0xa4:
-			//formatZPageInstruction(stringStream, "LDY", addressBus.readByte(pc + 1));
-			//desc.numBytes = 2;
+			{
+				regY = readZeroPageValue();
+				setNZFlags(regY);
+				regPC += 2;
+				cycleCount += 3;
+			}
 			break;
 		case 0xa5:
-			//formatZPageInstruction(stringStream, "LDA", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				regA = readZeroPageValue();
+				setNZFlags(regA);
+				regPC += 2;
+				cycleCount += 3;
+			}
 			break;
 		case 0xa6:
-			//formatZPageInstruction(stringStream, "LDX", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				regX = readZeroPageValue();
+				setNZFlags(regX);
+				regPC += 2;
+				cycleCount += 3;
+			}
 			break;
 		case 0xa8:
-			//stringStream << "TAY";
+			{
+				regY = regA;
+				setNZFlags(regY);
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0xA9:
-			//formatImmediateInstruction(stringStream, "LDA", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				regA = addressBus.readByte(regPC + 1);
+				setNZFlags(regA);
+				regPC += 2;
+				cycleCount += 2;
+			}
 			break;
 		case 0xAA:
-			//stringStream << "TAX";
+			{
+				regX = regA;
+				setNZFlags(regX);
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0xad:
-			//formatAbsoluteInstructionR(stringStream, "LDA", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				regA = readAbsolute();
+				setNZFlags(regA);
+				regPC += 3;
+				cycleCount += 4;
+			}
 			break;
 		case 0xb0:
 			{
@@ -1084,12 +1151,20 @@ void m6502::step()
 			}
 			break;
 		case 0xb1:
-			//formatIndirectYInstruction(stringStream, "LDA", addressBus.readByte(pc + 1));
-			//desc.numBytes = 2;
+			{
+				regA = readIndirectIndexedY();
+				setNZFlags(regA);
+				regPC += 2;
+				cycleCount += 5;
+			}
 			break;
 		case 0xb4:
-			//formatZPageXInstruction(stringStream, "LDY", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				regY = readZeroPageXValue();
+				setNZFlags(regY);
+				regPC += 2;
+				cycleCount += 4;
+			}
 			break;
 		case 0xb5:
 			//formatZPageXInstruction(stringStream, "LDA", addressBus.readByte(pc+1));
