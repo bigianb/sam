@@ -589,6 +589,13 @@ void m6502::doEOR(std::uint8_t val)
 	nFlag = regA >= 0x80;
 }
 
+void m6502::doCMP(std::uint8_t val)
+{
+	cFlag = (regA >= val);
+	zFlag = (regA == val);
+	nFlag = (((regA - val) & 0x80) == 0x80);
+}
+
 void m6502::doADC(std::uint8_t val)
 {
 	std::uint8_t originalRegA = regA;
@@ -1203,12 +1210,19 @@ void m6502::step()
 			}
 			break;
 		case 0xbc:
-			//formatAbsoluteXInstructionR(stringStream, "LDY", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				regY = readAbsoluteX();
+				setNZFlags(regY);
+				regPC += 3;
+				cycleCount += 4;
+			}
 			break;
 		case 0xc5:
-			//formatZPageInstruction(stringStream, "CMP", addressBus.readByte(pc + 1));
-			//desc.numBytes = 2;
+			{
+				doCMP(readZeroPageValue());
+				regPC += 2;
+				cycleCount += 3;
+			}
 			break;
 		case 0xc6:
 			//formatZPageInstruction(stringStream, "DEC", addressBus.readByte(pc+1));
