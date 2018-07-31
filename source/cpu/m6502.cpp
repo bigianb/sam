@@ -596,6 +596,13 @@ void m6502::doCMP(std::uint8_t val)
 	nFlag = (((regA - val) & 0x80) == 0x80);
 }
 
+void m6502::doCPY(std::uint8_t val)
+{
+	cFlag = (regY >= val);
+	zFlag = (regY == val);
+	nFlag = (((regY - val) & 0x80) == 0x80);
+}
+
 void m6502::doADC(std::uint8_t val)
 {
 	std::uint8_t originalRegA = regA;
@@ -1225,8 +1232,14 @@ void m6502::step()
 			}
 			break;
 		case 0xc6:
-			//formatZPageInstruction(stringStream, "DEC", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				std::uint8_t val = readZeroPageValue();
+				--val;
+				writeZeroPageValue(val);
+				setNZFlags(val);
+				regPC += 2;
+				cycleCount += 5;
+			}
 			break;
 		case 0xc8:
 			{
@@ -1238,8 +1251,11 @@ void m6502::step()
 			}
 			break;
 		case 0xc9:
-			//formatImmediateInstruction(stringStream, "CMP", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				doCMP(addressBus.readByte(regPC + 1));
+				regPC += 2;
+				cycleCount += 2;
+			}
 			break;
 		case 0xca:
 			{
@@ -1251,8 +1267,11 @@ void m6502::step()
 			}
 			break;
 		case 0xcc:
-			//formatAbsoluteInstructionR(stringStream, "CPY", addressBus.readByte(pc+1), addressBus.readByte(pc+2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				doCPY(readAbsolute());
+				regPC += 3;
+				cycleCount += 4;
+			}
 			break;
 		case 0xd0:
 			{
@@ -1267,12 +1286,18 @@ void m6502::step()
 			}
 			break;
 		case 0xd9:
-			//formatAbsoluteYInstructionR(stringStream, "CMP", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				doCMP(readAbsoluteY());
+				regPC += 3;
+				cycleCount += 4;
+			}
 			break;
 		case 0xdd:
-			//formatAbsoluteXInstructionR(stringStream, "CMP", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				doCMP(readAbsoluteX());
+				regPC += 3;
+				cycleCount += 4;
+			}
 			break;
 		case 0xe0:
 			//formatImmediateInstruction(stringStream, "CPX", addressBus.readByte(pc+1));
