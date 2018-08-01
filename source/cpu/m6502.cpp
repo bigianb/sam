@@ -596,6 +596,13 @@ void m6502::doCMP(std::uint8_t val)
 	nFlag = (((regA - val) & 0x80) == 0x80);
 }
 
+void m6502::doCPX(std::uint8_t val)
+{
+	cFlag = (regX >= val);
+	zFlag = (regX == val);
+	nFlag = (((regX - val) & 0x80) == 0x80);
+}
+
 void m6502::doCPY(std::uint8_t val)
 {
 	cFlag = (regY >= val);
@@ -1300,16 +1307,28 @@ void m6502::step()
 			}
 			break;
 		case 0xe0:
-			//formatImmediateInstruction(stringStream, "CPX", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				doCPX(addressBus.readByte(regPC + 1));
+				regPC += 2;
+				cycleCount += 2;
+			}
 			break;
 		case 0xe5:
-			//formatZPageInstruction(stringStream, "SBC", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				doADC(~readZeroPageValue());
+				regPC += 2;
+				cycleCount += 3;
+			}
 			break;
 		case 0xe6:
-			//formatZPageInstruction(stringStream, "INC", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				std::uint8_t val = readZeroPageValue();
+				++val;
+				writeZeroPageValue(val);
+				setNZFlags(val);
+				regPC += 2;
+				cycleCount += 5;
+			}
 			break;
 		case 0xe8:
 			{
