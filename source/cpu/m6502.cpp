@@ -1340,8 +1340,11 @@ void m6502::step()
 			}
 			break;
 		case 0xe9:
-			//formatImmediateInstruction(stringStream, "SBC", addressBus.readByte(pc+1));
-			//desc.numBytes = 2;
+			{
+				doADC(~addressBus.readByte(regPC + 1));
+				regPC += 2;
+				cycleCount += 2;
+			}
 			break;
 		case 0xea:
 			{
@@ -1351,8 +1354,11 @@ void m6502::step()
 			}
 			break;
 		case 0xed:
-			//formatAbsoluteInstructionR(stringStream, "SBC", addressBus.readByte(pc + 1), addressBus.readByte(pc + 2), debugInfo);
-			//desc.numBytes = 3;
+			{
+				doADC(~readAbsolute());
+				regPC += 3;
+				cycleCount += 4;
+			}
 			break;
 		case 0xf0:
 			{
