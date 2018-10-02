@@ -10,7 +10,7 @@ public:
 	m6502(AddressBus& ab) : addressBus(ab) {}
 	void reset();
 	void step();
-	
+
 	class OpcodeDesc
 	{
 	public:
@@ -38,7 +38,15 @@ public:
 	bool decimalMode;
 	bool interruptDisable;
 
+	void setIrqLow() { irqLine = false; }
+	void setIrqHigh() { irqLine = true; }
+
 private:
+	bool irqLine;
+
+	void doPhp();
+	void doPlp();
+
 	std::uint16_t getIndexedIndirectAddress();
 	std::uint16_t getIndirectIndexedYAddress();
 	std::uint8_t readIndexedIndirect();

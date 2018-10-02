@@ -126,6 +126,50 @@ void dump(std::ostream& os, int fromPC, int toPC, DebugInfo& debugInfo, m6502& c
 	}
 }
 
+/*
+// https://www.arcade-museum.com/game_detail.php?game_id=9541
+#define EXIDY_MASTER_CLOCK              (XTAL_11_289MHz)
+#define EXIDY_CPU_CLOCK                 (EXIDY_MASTER_CLOCK / 16)
+#define EXIDY_PIXEL_CLOCK               (EXIDY_MASTER_CLOCK / 2)
+
+Total pixels = 0x150 * 0x118 = 16f80 = 94080 dec
+pixel clock = 5644500 Hz
+Rate = 59 Frames per second
+
+#define EXIDY_HTOTAL                    (0x150)
+#define EXIDY_HBEND                     (0x000)
+#define EXIDY_HBSTART                   (0x100)
+#define EXIDY_HSEND                     (0x140)
+#define EXIDY_HSSTART                   (0x120)
+
+#define EXIDY_VTOTAL                    (0x118)
+#define EXIDY_VBEND                     (0x000)
+#define EXIDY_VBSTART                   (0x100)
+#define EXIDY_VSEND                     (0x108)
+#define EXIDY_VSSTART                   (0x100)
+*/
+
+int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus)
+{
+	// There are 8 pixels per cpu cycle
+	// There are 94080 pixels per frame and so there are 11,760 cycles per frame
+	const int cyclesPerFrame = 11760;
+
+	int framesToGo = 10;
+
+	while (framesToGo > 0) {
+		cpu.cycleCount = 0;
+		while (cpu.cycleCount < cyclesPerFrame) {
+			cpu.step();
+			cpu.setIrqHigh();
+		}
+		cpu.setIrqLow();
+		framesToGo -= 1;
+	}
+	return 0;
+}
+
+
 int main(int argc, char *argv[])
 {
 	Ram ram(64 * 1024);
@@ -161,7 +205,7 @@ int main(int argc, char *argv[])
 	if (options.dump) {
 		dump(std::cout, pc, 0x3aaa, debugInfo, cpu, bus);
 	}
-	return 0;
+	return runCpu(debugInfo, cpu, bus);
 }
 /*
 ROM_START(sidetrac)

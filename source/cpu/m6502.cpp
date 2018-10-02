@@ -418,6 +418,9 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc, DebugInfo& debugInfo)
 void m6502::reset()
 {
 	regPC = addressBus.readByte(0xFFFD) * 256 + addressBus.readByte(0xFFFC);
+	irqLine = true;
+	interruptDisable = true;
+	cycleCount = 0;
 }
 
 std::uint16_t m6502::getIndexedIndirectAddress()
@@ -702,10 +705,53 @@ void m6502::doBranch(bool predicate, std::int8_t offset)
 	}
 }
 
+void m6502::doPhp()
+{
+	/*
+	The flags are copied to memory in this arrangement:
+
+	Bit 7 : Negative
+	Bit 6 : Overflow
+	Bit 5 : Always set
+	Bit 4 : Clear if interrupt vectoring, set if BRK or PHP
+	Bit 3 : Decimal mode
+	Bit 2 : Interrupt disable
+	Bit 1 : Zero
+	Bit 0 : Carry
+	*/
+	std::uint8_t flags = 0x30;
+	if (nFlag) { flags |= 0x80; }
+	if (vFlag) { flags |= 0x40; }
+	if (decimalMode) { flags |= 0x08; }
+	if (interruptDisable) { flags |= 0x04; }
+	if (zFlag) { flags |= 0x02; }
+	if (cFlag) { flags |= 0x01; }
+
+	pushByte(flags);
+}
+
+void m6502::doPlp()
+{
+	std::uint8_t flags = popByte();
+	nFlag = (flags & 0x80) == 0x80;
+	vFlag = (flags & 0x40) == 0x40;
+	decimalMode = (flags & 0x08) == 0x08;
+	interruptDisable = (flags & 0x04) == 0x04;
+	zFlag = (flags & 0x02) == 0x02;
+	cFlag = (flags & 0x01) == 0x01;
+}
+
 void m6502::step()
 {
-	int opcode = addressBus.readByte(regPC);
 	int cycles = 0;
+	if (!interruptDisable && !irqLine) {
+		pushShort(regPC);
+		doPhp();
+		interruptDisable = true;
+		regPC = addressBus.readByte(0xFFFF) * 256 + addressBus.readByte(0xFFFE);
+		cycles += 7;
+	}
+	int opcode = addressBus.readByte(regPC);
 	switch (opcode)
 	{
 		case 0x01:
@@ -745,28 +791,7 @@ void m6502::step()
 		case 0x08:
 			// PHP
 			{
-			/*
-				The flags are copied to memory in this arrangement:
-
-				Bit 7 : Negative
-				Bit 6 : Overflow
-				Bit 5 : Always set
-				Bit 4 : Clear if interrupt vectoring, set if BRK or PHP
-				Bit 3 : Decimal mode
-				Bit 2 : Interrupt disable
-				Bit 1 : Zero
-				Bit 0 : Carry
-			*/
-				std::uint8_t flags = 0x30;
-				if (nFlag) { flags |= 0x80; }
-				if (vFlag) { flags |= 0x40; }
-				if (decimalMode) { flags |= 0x08; }
-				if (interruptDisable) { flags |= 0x04; }
-				if (zFlag) { flags |= 0x02; }
-				if (cFlag) { flags |= 0x01; }
-
-				pushByte(flags);
-
+				doPhp();
 				regPC += 1;
 				cycleCount += 3;
 			}
@@ -852,13 +877,7 @@ void m6502::step()
 		case 0x28:
 			{
 				// PLP
-				std::uint8_t flags = popByte();
-				nFlag = (flags & 0x80) == 0x80;
-				vFlag = (flags & 0x40) == 0x40;
-				decimalMode = (flags & 0x08) == 0x08;
-				interruptDisable = (flags & 0x04) == 0x04;
-				zFlag = (flags & 0x02) == 0x02;
-				cFlag = (flags & 0x01) == 0x01;
+				doPlp();
 
 				regPC += 1;
 				cycleCount += 4;
@@ -887,7 +906,12 @@ void m6502::step()
 			}
 			break;
 		case 0x40:
-			//stringStream << "RTI";
+			// RTI
+			{
+				doPlp();
+				regPC = popShort();
+				cycleCount += 6;
+			}
 			break;
 		case 0x41:
 			// EOR ($nn,X)
@@ -954,7 +978,12 @@ void m6502::step()
 			}
 			break;
 		case 0x58:
-			//stringStream << "CLI";
+			// CLI
+			{
+				interruptDisable = false;
+				cycleCount += 2;
+				regPC += 1;
+			}
 			break;
 		case 0x5d:
 			{
@@ -1005,7 +1034,12 @@ void m6502::step()
 			}
 			break;
 		case 0x78:
-			//stringStream << "SEI";
+			// SEI
+			{
+				interruptDisable = true;
+				regPC += 1;
+				cycleCount += 2;
+			}
 			break;
 		case 0x7d:
 			{
