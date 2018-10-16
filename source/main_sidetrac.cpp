@@ -7,6 +7,8 @@
 
 #include "boost/program_options.hpp"
 
+#include <SDL.h>
+
 using namespace std;
 
 #include "rom_loader.h"
@@ -126,6 +128,45 @@ void dump(std::ostream& os, int fromPC, int toPC, DebugInfo& debugInfo, m6502& c
 	}
 }
 
+void renderCharacter(SDL_Surface* surface, int charX, int charY, std::uint8_t code, AddressBus& bus)
+{
+    SDL_PixelFormat* fmt = surface->format;
+    const int bytesPP = fmt->BytesPerPixel;
+    int charBitsAddr = 0x4800 + code * 8;
+    for (int row=0; row<8; ++row){
+        int rowBits = bus.readByte(charBitsAddr);
+        std::uint8_t* tgt = ((std::uint8_t*)surface->pixels) + (charY*8+row)*surface->pitch + (charX*8*bytesPP);
+        for (int col=0; col<8; ++col){
+            rowBits <<= 1;
+            std::uint8_t pixval = 0;
+            if ((rowBits & 0x100) == 0x100){
+                pixval=0xFF;
+            }
+            for (int cc=0; cc<bytesPP; ++cc){
+                *tgt = pixval;
+                ++tgt;
+            }
+        }
+        ++charBitsAddr;
+    }
+}
+
+void grabScreenBuffer(SDL_Surface* surface,  AddressBus& bus, Ram& spriteRom)
+{
+    // Video ram (bitmap for characters) is at 0x4800
+    // Character ram is at 0x4000
+    SDL_LockSurface(surface);
+    int pChar = 0x4000;
+    for (int charY = 0; charY < 0x20; ++charY){
+        for (int charX = 0; charX < 0x20; ++charX){
+            std::uint8_t charCode = bus.readByte(pChar);
+            renderCharacter(surface, charX, charY, charCode, bus);
+            ++pChar;
+        }
+    }
+    SDL_UnlockSurface(surface);
+}
+
 /*
 // https://www.arcade-museum.com/game_detail.php?game_id=9541
 #define EXIDY_MASTER_CLOCK              (XTAL_11_289MHz)
@@ -149,13 +190,24 @@ Rate = 59 Frames per second
 #define EXIDY_VSSTART                   (0x100)
 */
 
-int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus)
+int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
 {
+    if (SDL_Init(SDL_INIT_VIDEO) < 0){
+        std::cout << "SDL init fail: " << SDL_GetError();
+        return -1;
+    }
+    SDL_Window* window = SDL_CreateWindow( "Sidetrac", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN );
+    if (window == nullptr){
+        std::cout << "SDL create window fail: " << SDL_GetError();
+        return -1;
+    }
+    SDL_Surface* surface = SDL_GetWindowSurface( window );
+    
 	// There are 8 pixels per cpu cycle
 	// There are 94080 pixels per frame and so there are 11,760 cycles per frame
 	const int cyclesPerFrame = 11760;
 
-	int framesToGo = 10;
+	int framesToGo = 10000;
 
 	while (framesToGo > 0) {
 		cpu.cycleCount = 0;
@@ -164,11 +216,15 @@ int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus)
 			cpu.setIrqHigh();
 		}
 		cpu.setIrqLow();
+        grabScreenBuffer(surface, bus, graphicsRam);
+        SDL_UpdateWindowSurface( window );
+        
 		framesToGo -= 1;
 	}
+    SDL_DestroyWindow( window );
+    SDL_Quit();
 	return 0;
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -190,6 +246,10 @@ int main(int argc, char *argv[])
 	romLoader.load("stl6a-2", 0x3800, 0x0800, ram);
 	romLoader.load("stl9c-1", 0x4800, 0x0400, ram);
 
+    // Sprites
+    Ram graphicsRam(0x200);
+    romLoader.load("stl11d", 0x0, 0x0200, graphicsRam);
+    
 	DirectAddressBus bus(ram);
 
 	m6502 cpu(bus);
@@ -205,7 +265,7 @@ int main(int argc, char *argv[])
 	if (options.dump) {
 		dump(std::cout, pc, 0x3aaa, debugInfo, cpu, bus);
 	}
-	return runCpu(debugInfo, cpu, bus);
+	return runCpu(debugInfo, cpu, bus, graphicsRam);
 }
 /*
 ROM_START(sidetrac)

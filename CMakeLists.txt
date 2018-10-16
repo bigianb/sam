@@ -17,6 +17,9 @@ if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
+find_package(SDL2 REQUIRED)
+include_directories(${SDL2_INCLUDE_DIRS})
+
 # flags
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -76,7 +79,7 @@ add_executable(sam_1942 ${SRC_FILES})
 target_link_libraries(sam_1942 cpu core ${Boost_LIBRARIES})
 
 add_executable(sam_sidetrac ${SIDETRAC_FILES})
-target_link_libraries(sam_sidetrac cpu core ${Boost_LIBRARIES})
+target_link_libraries(sam_sidetrac cpu core ${Boost_LIBRARIES} ${SDL2_LIBRARIES})
 
 include(BoostTestHelpers.cmake)
 add_boost_test(source/cpu/m6502_test.cpp cpu core)

@@ -56,12 +56,6 @@ static void formatAbsoluteXInstructionR(std::ostringstream& os, const char* opco
 	os << ", X";
 }
 
-static void formatAbsoluteXInstructionW(std::ostringstream& os, const char* opcode, int loVal, int hiVal, DebugInfo& debugInfo)
-{
-	formatAbsoluteInstructionW(os, opcode, loVal, hiVal, debugInfo);
-	os << ", X";
-}
-
 static void formatAbsoluteYInstructionR(std::ostringstream& os, const char* opcode, int loVal, int hiVal, DebugInfo& debugInfo)
 {
 	formatAbsoluteInstructionR(os, opcode, loVal, hiVal, debugInfo);
@@ -91,7 +85,6 @@ m6502::OpcodeDesc m6502::disassemble(unsigned short pc, DebugInfo& debugInfo)
 	desc.numBytes = 1;
 
 	int opcode = addressBus.readByte(pc);
-	int byte2 = addressBus.readByte(pc+1);
 	std::ostringstream stringStream;
 
 	switch (opcode)

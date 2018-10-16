@@ -16,5 +16,6 @@
         "map": "cpp",
         "string": "cpp",
         "string_view": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": true
 }
