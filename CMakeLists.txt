@@ -1,7 +1,10 @@
 # travis has cmake 3.9
 cmake_minimum_required(VERSION 3.9)
 
-project(sam)
+project(SAM)
+
+set(SAM_CMAKE_DIR "${SAM_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH ${SAM_CMAKE_DIR} ${CMAKE_MODULE_PATH})
 
 enable_testing()
 
