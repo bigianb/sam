@@ -82,7 +82,7 @@ add_executable(sam_1942 ${SRC_FILES})
 target_link_libraries(sam_1942 cpu core ${Boost_LIBRARIES})
 
 add_executable(sam_sidetrac ${SIDETRAC_FILES})
-target_link_libraries(sam_sidetrac cpu core ${Boost_LIBRARIES} ${SDL2_LIBRARIES})
+target_link_libraries(sam_sidetrac cpu core ${Boost_LIBRARIES} ${SDL2_LIBRARY})
 
 include(BoostTestHelpers.cmake)
 add_boost_test(source/cpu/m6502_test.cpp cpu core)
