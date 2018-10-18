@@ -210,8 +210,9 @@ int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
 	const int cyclesPerFrame = 11760;
 
 	int frameNum = 1;
+	bool quitRequested = false;
 	unsigned int frame0Tick = SDL_GetTicks();
-	while (frameNum < 60 * 60 * 1) {
+	while (frameNum < 60 * 60 * 1 && !quitRequested) {
 		cpu.cycleCount = 0;
 		while (cpu.cycleCount < cyclesPerFrame) {
 			cpu.step();
@@ -221,10 +222,13 @@ int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
         grabScreenBuffer(surface, bus, graphicsRam);
         SDL_UpdateWindowSurface( window );
         
-		SDL_Event Event;
+		SDL_Event event;
 
-		while (SDL_PollEvent(&Event))
+		while (SDL_PollEvent(&event))
 		{
+			if (event.type == SDL_QUIT) {
+				quitRequested = true;
+			}
 			// input handler goes here
 		}
 
