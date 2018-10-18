@@ -190,13 +190,15 @@ Rate = 59 Frames per second
 #define EXIDY_VSSTART                   (0x100)
 */
 
+static const int MILLIS_PER_FRAME = 1000 / 59;
+
 int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0){
         std::cout << "SDL init fail: " << SDL_GetError();
         return -1;
     }
-    SDL_Window* window = SDL_CreateWindow( "Sidetrac", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN );
+    SDL_Window* window = SDL_CreateWindow( "Sidetrac", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 320, 320, SDL_WINDOW_SHOWN );
     if (window == nullptr){
         std::cout << "SDL create window fail: " << SDL_GetError();
         return -1;
@@ -207,9 +209,9 @@ int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
 	// There are 94080 pixels per frame and so there are 11,760 cycles per frame
 	const int cyclesPerFrame = 11760;
 
-	int framesToGo = 10000;
-
-	while (framesToGo > 0) {
+	int frameNum = 1;
+	unsigned int frame0Tick = SDL_GetTicks();
+	while (frameNum < 60 * 60 * 1) {
 		cpu.cycleCount = 0;
 		while (cpu.cycleCount < cyclesPerFrame) {
 			cpu.step();
@@ -219,7 +221,20 @@ int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
         grabScreenBuffer(surface, bus, graphicsRam);
         SDL_UpdateWindowSurface( window );
         
-		framesToGo -= 1;
+		SDL_Event Event;
+
+		while (SDL_PollEvent(&Event))
+		{
+			// input handler goes here
+		}
+
+		unsigned int requiredTick = frameNum * 1000 / 60;
+		unsigned int frameEndTick = SDL_GetTicks();
+		int delayTicks = requiredTick - frameEndTick;
+		if (delayTicks > 0) {
+			SDL_Delay(delayTicks);
+		}
+		++frameNum;
 	}
     SDL_DestroyWindow( window );
     SDL_Quit();
