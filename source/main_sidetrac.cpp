@@ -209,10 +209,13 @@ int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
 	// There are 94080 pixels per frame and so there are 11,760 cycles per frame
 	const int cyclesPerFrame = 11760;
 
+	// Input port - active low
+	bus.writeByte(0x5101, 0xFF);
+
 	int frameNum = 1;
 	bool quitRequested = false;
 	unsigned int frame0Tick = SDL_GetTicks();
-	while (frameNum < 60 * 60 * 1 && !quitRequested) {
+	while (!quitRequested) {
 		cpu.cycleCount = 0;
 		while (cpu.cycleCount < cyclesPerFrame) {
 			cpu.step();
@@ -223,13 +226,24 @@ int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
         SDL_UpdateWindowSurface( window );
         
 		SDL_Event event;
-
 		while (SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_QUIT) {
 				quitRequested = true;
 			}
-			// input handler goes here
+			else if (event.type == SDL_KEYDOWN) {
+				if (event.key.keysym.sym == SDLK_1) {
+					auto val = bus.readByte(0x5101);
+					bus.writeByte(0x5101, val & 0x7f);
+				}
+			}
+			else if (event.type == SDL_KEYUP) {
+				if (event.key.keysym.sym == SDLK_1) {
+					auto val = bus.readByte(0x5101);
+					bus.writeByte(0x5101, val | 0x80);
+				}
+			}
+			break;
 		}
 
 		unsigned int requiredTick = frameNum * 1000 / 60;
