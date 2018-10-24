@@ -192,6 +192,7 @@ Rate = 59 Frames per second
 
 static const int MILLIS_PER_FRAME = 1000 / 59;
 
+
 int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0){
@@ -225,6 +226,8 @@ int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
         grabScreenBuffer(surface, bus, graphicsRam);
         SDL_UpdateWindowSurface( window );
         
+		unsigned int requiredTick = frame0Tick + frameNum * 1000 / 60;
+
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
@@ -243,14 +246,22 @@ int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
 					bus.writeByte(0x5101, val | 0x80);
 				}
 			}
-			break;
+			unsigned int nowTick = SDL_GetTicks();
+			if (nowTick >= requiredTick) {
+				break;
+			}
+			
 		}
 
-		unsigned int requiredTick = frameNum * 1000 / 60;
 		unsigned int frameEndTick = SDL_GetTicks();
 		int delayTicks = requiredTick - frameEndTick;
 		if (delayTicks > 0) {
 			SDL_Delay(delayTicks);
+		}
+		if (delayTicks < 10) {
+			// Something happened such as a window move / resize on windows. Reset the clock.
+			frameNum = 0;
+			frame0Tick = SDL_GetTicks();
 		}
 		++frameNum;
 	}
