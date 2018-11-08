@@ -9,6 +9,10 @@
 
 #include <SDL.h>
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 using namespace std;
 
 #include "rom_loader.h"
@@ -238,12 +242,20 @@ int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
 				if (event.key.keysym.sym == SDLK_1) {
 					auto val = bus.readByte(0x5101);
 					bus.writeByte(0x5101, val & 0x7f);
+
+					cout << "down" << std::endl;
+					cout << "$13 = " << (int)bus.readByte(0x13) << endl;
+					cout << "$6 = " << (int)bus.readByte(0x6) << endl;
+					cout << "$5100 = " << (int)bus.readByte(0x5100) << endl;
 				}
 			}
 			else if (event.type == SDL_KEYUP) {
 				if (event.key.keysym.sym == SDLK_1) {
 					auto val = bus.readByte(0x5101);
 					bus.writeByte(0x5101, val | 0x80);
+					cout << "up" << std::endl;
+					cout << "$13 = " << (int)bus.readByte(0x13) << endl;
+					cout << "$6 = " << (int)bus.readByte(0x6) << endl;
 				}
 			}
 			unsigned int nowTick = SDL_GetTicks();
@@ -300,6 +312,11 @@ int main(int argc, char *argv[])
 
 	DebugInfo debugInfo;
 	debugInfo.read(options.configbase + "/sidetrac_symbols.json");
+
+	// dip switches. Set before the write handler is installed.
+	bus.writeByte(0x5100, 0);
+
+	bus.addWriteHandler(0x5100, [](std::uint32_t addr, std::uint8_t val) {/* std::cout << "wrote " << (int)val << " to 5100" << endl; */ });
 
 	// 0x3f00 is mirrored to 0xFF00
 	bus.setMirror(0xFF00, 0xFFFF, 0x3F00);

@@ -655,25 +655,28 @@ audio_on()
 
 test_for_coin()
     2cb0: LDA $5101  input_0
-    2cb3: BPL *4   -> 0x2cb9
+    2cb3: BPL *4   -> 0x2cb9		; Is a coin active?
     2cb5: NOP
-    2cb6: LDA #00
+    2cb6: LDA #00					; no - return 0
     2cb8: RTS
     2cb9: LDA #ff
-    2cbb: STA $03
+    2cbb: STA $03					; $03 = 0xFF
     2cbd: LDA $5101  input_0
-    2cc0: BMI *-18   -> 0x2cb0
+    2cc0: BMI *-18   -> 0x2cb0		; coin no longer active. Not long enough so forget it.
     2cc2: DEC $03
-    2cc4: BNE *-9   -> 0x2cbd
+    2cc4: BNE *-9   -> 0x2cbd		; loop for 255 times.
+
     2cc6: LDA $5101  input_0
     2cc9: BMI *3   -> 0x2cce
     2ccb: NOP
-    2ccc: BPL *-8   -> 0x2cc6
-    2cce: DEC $03
+    2ccc: BPL *-8   -> 0x2cc6		; loop if active
+    2cce: DEC $03					; decrement if inactive
     2cd0: LDA $5101  input_0
-    2cd3: BPL *-15   -> 0x2cc6
-    2cd5: DEC $03
-    2cd7: BNE *-9   -> 0x2cd0
+    2cd3: BPL *-15   -> 0x2cc6		; start again if active
+    
+	2cd5: DEC $03
+    2cd7: BNE *-9   -> 0x2cd0		; wait for 255 loops of inactive
+
     2cd9: LDA $5100  dip_switches
     2cdc: AND #0c
     2cde: LSR A
@@ -685,6 +688,7 @@ test_for_coin()
     2ce7: STA $06
     2ce9: LSR A
     2cea: BEQ *12   -> 0x2cf8
+
     2cec: NOP
     2ced: SED
     2cee: CLC
@@ -694,6 +698,7 @@ test_for_coin()
     2cf4: LDA #00
     2cf6: STA $06
     2cf8: RTS
+
     2cf9: 0x04
     2cfa: 0x02
     2cfb: 0x01

@@ -1,6 +1,8 @@
 #pragma once
 #include "address_bus.h"
 #include "ram.h"
+#include <functional>
+#include <map>
 
 class MirrorRegion
 {
@@ -27,8 +29,14 @@ public:
 		mirrorRegions.push_back(MirrorRegion(start, end, target));
 	}
 
+	void addWriteHandler(std::uint32_t addr, std::function<void(std::uint32_t, std::uint8_t)> handler) {
+		writeHandlers[addr] = handler;
+	}
+
 private:
 	Ram & ram;
 
 	std::vector<MirrorRegion> mirrorRegions;
+
+	std::map<std::uint32_t, std::function<void(std::uint32_t, std::uint8_t)>> writeHandlers;
 };
