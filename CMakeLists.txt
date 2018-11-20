@@ -61,6 +61,7 @@ set(CPU_SRC_FILES
   source/cpu/m6502.h
   source/rom_loader.h
   source/rom_loader.cpp
+  source/address_bus.h
   source/direct_address_bus.h
   source/direct_address_bus.cpp
   source/debug_info.h

@@ -196,6 +196,13 @@ Rate = 59 Frames per second
 
 static const int MILLIS_PER_FRAME = 1000 / 59;
 
+static const auto COIN1_KEY = SDLK_1;
+static const auto START1_KEY = SDLK_2;
+static const auto START2_KEY = SDLK_3;
+static const auto UP_KEY = SDLK_UP;
+static const auto DOWN_KEY = SDLK_DOWN;
+static const auto LEFT_KEY = SDLK_LEFT;
+static const auto RIGHT_KEY = SDLK_RIGHT;
 
 int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
 {
@@ -239,23 +246,49 @@ int runCpu(DebugInfo& debugInfo, m6502& cpu, AddressBus& bus, Ram& graphicsRam)
 				quitRequested = true;
 			}
 			else if (event.type == SDL_KEYDOWN) {
-				if (event.key.keysym.sym == SDLK_1) {
+				if (event.key.keysym.sym == COIN1_KEY) {
 					auto val = bus.readByte(0x5101);
-					bus.writeByte(0x5101, val & 0x7f);
-
-					cout << "down" << std::endl;
-					cout << "$13 = " << (int)bus.readByte(0x13) << endl;
-					cout << "$6 = " << (int)bus.readByte(0x6) << endl;
-					cout << "$5100 = " << (int)bus.readByte(0x5100) << endl;
+					bus.setByte(0x5101, val & ~0x80);
+				} else if (event.key.keysym.sym == START1_KEY) {
+					auto val = bus.readByte(0x5101);
+					bus.setByte(0x5101, val & ~0x01);
+				} else if (event.key.keysym.sym == UP_KEY) {
+					auto val = bus.readByte(0x5101);
+					bus.setByte(0x5101, val & ~0x20);
+				} else if (event.key.keysym.sym == DOWN_KEY) {
+					auto val = bus.readByte(0x5101);
+					bus.setByte(0x5101, val & ~0x40);
+				} else if (event.key.keysym.sym == LEFT_KEY) {
+					auto val = bus.readByte(0x5101);
+					bus.setByte(0x5101, val & ~0x08);
+				} else if (event.key.keysym.sym == RIGHT_KEY) {
+					auto val = bus.readByte(0x5101);
+					bus.setByte(0x5101, val & ~0x04);
 				}
 			}
 			else if (event.type == SDL_KEYUP) {
-				if (event.key.keysym.sym == SDLK_1) {
+				if (event.key.keysym.sym == COIN1_KEY) {
 					auto val = bus.readByte(0x5101);
-					bus.writeByte(0x5101, val | 0x80);
-					cout << "up" << std::endl;
-					cout << "$13 = " << (int)bus.readByte(0x13) << endl;
-					cout << "$6 = " << (int)bus.readByte(0x6) << endl;
+					bus.setByte(0x5101, val | 0x80);
+				} else if (event.key.keysym.sym == START1_KEY) {
+					auto val = bus.readByte(0x5101);
+					bus.setByte(0x5101, val | 0x01);
+				}
+				else if (event.key.keysym.sym == UP_KEY) {
+					auto val = bus.readByte(0x5101);
+					bus.setByte(0x5101, val | 0x20);
+				}
+				else if (event.key.keysym.sym == DOWN_KEY) {
+					auto val = bus.readByte(0x5101);
+					bus.setByte(0x5101, val | 0x40);
+				}
+				else if (event.key.keysym.sym == LEFT_KEY) {
+					auto val = bus.readByte(0x5101);
+					bus.setByte(0x5101, val | 0x08);
+				}
+				else if (event.key.keysym.sym == RIGHT_KEY) {
+					auto val = bus.readByte(0x5101);
+					bus.setByte(0x5101, val | 0x04);
 				}
 			}
 			unsigned int nowTick = SDL_GetTicks();

@@ -20,14 +20,20 @@ void DirectAddressBus::writeByte(std::uint32_t address, std::uint8_t val)
 		handler(address, val);
 	}
 	else {
-		std::uint32_t targetAddress = address;
-		for (const auto& region : mirrorRegions) {
-			if (address >= region.start && address <= region.end) {
-				targetAddress = address + region.target - region.start;
-				break;
-			}
-		}
-		ram.bytes[targetAddress] = val;
+		setByte(address, val);
 	}
 }
+
+void DirectAddressBus::setByte(std::uint32_t address, std::uint8_t val)
+{
+	std::uint32_t targetAddress = address;
+	for (const auto& region : mirrorRegions) {
+		if (address >= region.start && address <= region.end) {
+			targetAddress = address + region.target - region.start;
+			break;
+		}
+	}
+	ram.bytes[targetAddress] = val;
+}
+
 
